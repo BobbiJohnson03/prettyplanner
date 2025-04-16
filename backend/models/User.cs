@@ -20,5 +20,8 @@ namespace GoalTracker.API.Models
 
         [BsonElement("createdAt")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [BsonElement("avatarUrl")]
+        public string AvatarUrl { get; set; } = string.Empty;
+
     }
 }

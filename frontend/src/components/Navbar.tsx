@@ -11,9 +11,8 @@ import HomeIcon from "@mui/icons-material/Home";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { useLogoutUserMutation } from "../redux/authApi";
 import { clearUser } from "../redux/authSlice";
-import { RootState, AppDispatch } from "../redux/store"; // adjust this path as needed
+import { RootState, AppDispatch } from "../redux/store";
 import "./Navbar.css";
 
 export default function Navbar() {
@@ -21,7 +20,6 @@ export default function Navbar() {
   const dispatch = useDispatch<AppDispatch>();
 
   const user = useSelector((state: RootState) => state.auth?.user);
-  const [logoutUser] = useLogoutUserMutation();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -30,15 +28,11 @@ export default function Navbar() {
     }
   }, [dispatch]);
 
-  const handleLogout = async () => {
-    try {
-      await logoutUser().unwrap();
-      dispatch(clearUser());
-      localStorage.clear();
-      navigate("/");
-    } catch (error) {
-      console.error("Błąd wylogowania:", error);
-    }
+  const handleLogout = () => {
+    dispatch(clearUser());
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/");
   };
 
   return (
@@ -60,12 +54,12 @@ export default function Navbar() {
           </IconButton>
           <Button
             component={RouterLink}
-            to="/"
+            to="/dashboard"
             className="nav-link nav-pink"
             color="inherit"
             sx={{ textTransform: "none" }}
           >
-            Button
+            My Dashboard
           </Button>
 
           <Button

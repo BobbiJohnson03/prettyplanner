@@ -27,5 +27,21 @@ namespace GoalTracker.API.Models
         [BsonElement("userId")]
         [BsonRepresentation(BsonType.ObjectId)]
         public string UserId { get; set; } = null!;
+
+        [BsonElement("frequency")]
+public string Frequency { get; set; } = string.Empty;
+
+[BsonElement("targetCount")]
+public int TargetCount { get; set; } = 0;
+
+[BsonElement("currentCount")]
+public int CurrentCount { get; set; } = 0;
+
+[BsonElement("type")]
+public string Type { get; set; } = "boolean"; // or 'counter', 'value'
+
+[BsonElement("deadline")]
+public DateTime Deadline { get; set; }
+
     }
 }

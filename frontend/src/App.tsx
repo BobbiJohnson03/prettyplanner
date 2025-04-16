@@ -11,6 +11,9 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import LandingPage from "./pages/LandingPage";
 import MyProfile from "./pages/MyProfile";
+import DashboardPage from "./pages/DashboardPage.tsx";
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
 const theme = createTheme({
   typography: {
@@ -28,19 +31,22 @@ const theme = createTheme({
 
 const App: React.FC = () => {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <VerticalLines />
-      <Box sx={{ borderBottom: "1px solid #eaeaea" }}>
-        <Navbar />
-      </Box>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/profile" element={<MyProfile />} />
-      </Routes>
-    </ThemeProvider>
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <VerticalLines />
+        <Box sx={{ borderBottom: "1px solid #eaeaea" }}>
+          <Navbar />
+        </Box>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/profile" element={<MyProfile />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+        </Routes>
+      </ThemeProvider>
+    </LocalizationProvider>
   );
 };
 

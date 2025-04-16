@@ -14,36 +14,6 @@ namespace GoalTracker.API.Controllers
         {
             _userService = userService;
         }
-        [HttpPost("register")]
-public async Task<IActionResult> Register([FromBody] User user)
-{
-    var existing = await _userService.GetByEmailAsync(user.Email);
-    if (existing != null)
-        return BadRequest(new { message = "Email already in use." });
-
-    await _userService.CreateAsync(user);
-    return Ok(user);
-}
-
-[HttpPost("logout")]
-public IActionResult Logout()
-{
-    return Ok(new { message = "User logged out." });
-}
-
-
-[HttpPost("login")]
-public async Task<IActionResult> Login([FromBody] LoginRequest login)
-{
-    var user = await _userService.GetByEmailAsync(login.Email);
-    if (user == null || user.PasswordHash != login.Password)
-    {
-        return Unauthorized(new { message = "Invalid email or password." });
-    }
-
-    // JWT token handling can be added here later
-    return Ok(new { user, token = "placeholder-token" });
-}
 
 
         [HttpGet]
@@ -75,6 +45,43 @@ public async Task<IActionResult> Login([FromBody] LoginRequest login)
             await _userService.UpdateAsync(id, user);
             return NoContent();
         }
+
+        [HttpPut("{id}/profile")]
+public async Task<IActionResult> UpdateProfile(string id, [FromForm] IFormFile? avatar, [FromForm] string username)
+{
+    var user = await _userService.GetByIdAsync(id);
+    if (user == null) return NotFound();
+
+    // Update username
+    user.Username = username;
+
+    // Handle avatar upload
+    if (avatar != null && avatar.Length > 0)
+    {
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+        var extension = Path.GetExtension(avatar.FileName).ToLower();
+
+        if (!allowedExtensions.Contains(extension))
+            return BadRequest("Unsupported file format. Use JPG, PNG, or WEBP.");
+
+        if (avatar.Length > 2 * 1024 * 1024)
+            return BadRequest("Image size must be under 2MB.");
+
+        var fileName = $"{Guid.NewGuid()}{extension}";
+        var avatarPath = Path.Combine("wwwroot", "avatars", fileName);
+
+        using (var stream = new FileStream(avatarPath, FileMode.Create))
+        {
+            await avatar.CopyToAsync(stream);
+        }
+
+        user.AvatarUrl = $"/avatars/{fileName}";
+    }
+
+    await _userService.UpdateAsync(id, user);
+    return Ok(user);
+}
+
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
