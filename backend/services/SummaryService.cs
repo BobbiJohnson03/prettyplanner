@@ -30,22 +30,22 @@ namespace GoalTracker.API.Services
 
         public async Task<Dictionary<string, int>> GetGoalCompletionsByDayAsync(string userId)
         {
-            var results = await _goals.Aggregate()
-                .Match(g => g.UserId == userId && g.IsCompleted)
-                .Group(g => g.CreatedAt.Date, g => new { Date = g.Key, Count = g.Count() })
-                .ToListAsync();
+            var goals = await _goals.Find(g => g.UserId == userId && g.IsCompleted).ToListAsync();
 
-            return results.ToDictionary(r => r.Date.ToShortDateString(), r => r.Count);
+            return goals
+                .Where(g => DateTime.TryParse(g.CreatedAt, out _))
+                .GroupBy(g => DateTime.Parse(g.CreatedAt).Date)
+                .ToDictionary(g => g.Key.ToShortDateString(), g => g.Count());
         }
 
         public async Task<Dictionary<string, int>> GetTaskCompletionsByDayAsync(string userId)
         {
-            var results = await _tasks.Aggregate()
-                .Match(t => t.UserId == userId && t.Status.ToLower() == "done")
-                .Group(t => t.CreatedAt.Date, t => new { Date = t.Key, Count = t.Count() })
-                .ToListAsync();
+            var tasks = await _tasks.Find(t => t.UserId == userId && t.Status.ToLower() == "done").ToListAsync();
 
-            return results.ToDictionary(r => r.Date.ToShortDateString(), r => r.Count);
+            return tasks
+                .Where(t => DateTime.TryParse(t.CreatedAt, out _))
+                .GroupBy(t => DateTime.Parse(t.CreatedAt).Date)
+                .ToDictionary(g => g.Key.ToShortDateString(), g => g.Count());
         }
     }
 }

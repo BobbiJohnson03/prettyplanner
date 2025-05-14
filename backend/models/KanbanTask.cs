@@ -7,35 +7,15 @@ namespace GoalTracker.API.Models
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string? Id { get; set; }
+        public string Id { get; set; } = string.Empty;
 
-        [BsonElement("title")]
-        public string Title { get; set; } = null!;
-
-        [BsonElement("description")]
+        public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-
-        [BsonElement("status")]
-        public string Status { get; set; } = "todo"; // todo, doing, done
-
-        [BsonElement("priority")]
-        public string Priority { get; set; } = "normal"; // low, normal, high
-
-        [BsonElement("category")]
-        public string Category { get; set; } = string.Empty;
-
-        [BsonElement("createdAt")]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        [BsonElement("deadline")]
-        public DateTime Deadline { get; set; }
-
-        [BsonElement("userId")]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string UserId { get; set; } = null!;
-
-        [BsonElement("color")]
+        public string Deadline { get; set; } = string.Empty;
+        public string Priority { get; set; } = "medium";
+        public string Status { get; set; } = "todo";
         public string Color { get; set; } = "#FFCDD2";
-
+        public string UserId { get; set; } = string.Empty;
+        public string CreatedAt { get; set; } = string.Empty;
     }
 }

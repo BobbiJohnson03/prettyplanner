@@ -2,9 +2,9 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 // 👤 User model
 export interface User {
+  _id: string;
   username: string;
   email: string;
-  _id?: string;
 }
 
 // 🔐 Auth response from backend

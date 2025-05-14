@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { RootState } from "./store";
 
 export interface KanbanTask {
-  _id?: string;
+  id: string; // zamiast _id
   title: string;
   description: string;
   deadline: string;
@@ -32,7 +32,10 @@ export const kanbanApi = createApi({
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ _id }) => ({ type: "KanbanTask" as const, id: _id })),
+              ...result.map(({ _id }) => ({
+                type: "KanbanTask" as const,
+                id: _id,
+              })),
               { type: "KanbanTask", id: "LIST" },
             ]
           : [{ type: "KanbanTask", id: "LIST" }],
@@ -47,7 +50,10 @@ export const kanbanApi = createApi({
       invalidatesTags: [{ type: "KanbanTask", id: "LIST" }],
     }),
 
-    updateTask: builder.mutation<KanbanTask, { id: string; updated: Partial<KanbanTask> }>({
+    updateTask: builder.mutation<
+      KanbanTask,
+      { id: string; updated: Partial<KanbanTask> }
+    >({
       query: ({ id, updated }) => ({
         url: `/${id}`,
         method: "PUT",

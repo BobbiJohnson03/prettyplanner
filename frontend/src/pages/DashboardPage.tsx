@@ -38,7 +38,7 @@ const initialData: Record<"todo" | "inProgress" | "done", KanbanTask[]> = {
 
 const DashboardPage: React.FC = () => {
   const user = useSelector((state: RootState) => state.auth.user);
-  const userId = user?._id;
+  const userId = user?.id || user?._id;
 
   const {
     data: tasks = [],
@@ -113,8 +113,14 @@ const DashboardPage: React.FC = () => {
   const handleDragEnd = async (result: DropResult) => {
     if (!result.destination) return;
 
-    const sourceCol = result.source.droppableId as "todo" | "inProgress" | "done";
-    const destCol = result.destination.droppableId as "todo" | "inProgress" | "done";
+    const sourceCol = result.source.droppableId as
+      | "todo"
+      | "inProgress"
+      | "done";
+    const destCol = result.destination.droppableId as
+      | "todo"
+      | "inProgress"
+      | "done";
 
     const task = columns[sourceCol][result.source.index];
     const updatedTask = { ...task, status: destCol };
@@ -130,7 +136,7 @@ const DashboardPage: React.FC = () => {
       [destCol]: updatedDest,
     });
 
-    await updateTask({ id: task._id!, updated: updatedTask });
+    await updateTask({ id: task.id, updated: updatedTask });
   };
 
   const handleDeleteTask = async (id: string) => {
@@ -138,8 +144,16 @@ const DashboardPage: React.FC = () => {
     await refetch(); // ⬅️ odśwież po usunięciu
   };
 
+  console.log("Current userId from Redux:", userId);
+
   return (
-    <Box display="flex" p={4} gap={3} alignItems="flex-start" sx={{ backgroundColor: "#181818", minHeight: "100vh" }}>
+    <Box
+      display="flex"
+      p={4}
+      gap={3}
+      alignItems="flex-start"
+      sx={{ backgroundColor: "#181818", minHeight: "100vh" }}
+    >
       <Button variant="contained" onClick={() => setOpen(true)}>
         Add Kanban Task
       </Button>
@@ -159,12 +173,17 @@ const DashboardPage: React.FC = () => {
                   p: 2,
                 }}
               >
-                <Typography variant="h6" align="center" fontWeight="bold" sx={{ color: "#f5f5f5" }}>
+                <Typography
+                  variant="h6"
+                  align="center"
+                  fontWeight="bold"
+                  sx={{ color: "#f5f5f5" }}
+                >
                   {status.toUpperCase()}
                 </Typography>
 
                 {tasks.map((task, index) => (
-                  <Draggable key={task._id} draggableId={task._id!} index={index}>
+                  <Draggable key={task.id} draggableId={task.id} index={index}>
                     {(provided) => (
                       <Box
                         ref={provided.innerRef}
@@ -179,9 +198,16 @@ const DashboardPage: React.FC = () => {
                           color: "#fff",
                         }}
                       >
-                        <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Box
+                          display="flex"
+                          justifyContent="space-between"
+                          alignItems="center"
+                        >
                           <Typography variant="body1">{task.title}</Typography>
-                          <IconButton size="small" onClick={() => handleDeleteTask(task._id!)}>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDeleteTask(task.id)}
+                          >
                             <DeleteIcon sx={{ color: "#fff" }} />
                           </IconButton>
                         </Box>
@@ -189,9 +215,16 @@ const DashboardPage: React.FC = () => {
                           {task.description}
                         </Typography>
                         <Typography variant="body2" sx={{ fontSize: 12 }}>
-                          {task.deadline ? `Due: ${dayjs(task.deadline).format("YYYY-MM-DD")}` : "No deadline"}
+                          {task.deadline
+                            ? `Due: ${dayjs(task.deadline).format(
+                                "YYYY-MM-DD"
+                              )}`
+                            : "No deadline"}
                         </Typography>
-                        <Typography variant="caption" sx={{ fontWeight: "bold" }}>
+                        <Typography
+                          variant="caption"
+                          sx={{ fontWeight: "bold" }}
+                        >
                           Priority: {task.priority}
                         </Typography>
                       </Box>
@@ -206,8 +239,15 @@ const DashboardPage: React.FC = () => {
       </DragDropContext>
 
       {/* DIALOG */}
-      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle sx={{ backgroundColor: "#121212", color: "#f5f5f5" }}>Add Kanban Task</DialogTitle>
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle sx={{ backgroundColor: "#121212", color: "#f5f5f5" }}>
+          Add Kanban Task
+        </DialogTitle>
         <DialogContent sx={{ backgroundColor: "#1c1c1c" }}>
           <TextField
             label="Title"
@@ -226,7 +266,9 @@ const DashboardPage: React.FC = () => {
             multiline
             rows={3}
             value={newTask.description}
-            onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+            onChange={(e) =>
+              setNewTask({ ...newTask, description: e.target.value })
+            }
             InputLabelProps={{ style: { color: "#ccc" } }}
             InputProps={{ style: { color: "#f5f5f5" } }}
           />
@@ -234,7 +276,9 @@ const DashboardPage: React.FC = () => {
           <DatePicker
             label="Deadline"
             value={newTask.deadline}
-            onChange={(newDate) => setNewTask({ ...newTask, deadline: newDate })}
+            onChange={(newDate) =>
+              setNewTask({ ...newTask, deadline: newDate })
+            }
             slotProps={{
               textField: {
                 fullWidth: true,
@@ -251,7 +295,9 @@ const DashboardPage: React.FC = () => {
             fullWidth
             margin="normal"
             value={newTask.priority}
-            onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+            onChange={(e) =>
+              setNewTask({ ...newTask, priority: e.target.value })
+            }
             InputLabelProps={{ style: { color: "#ccc" } }}
             InputProps={{ style: { color: "#f5f5f5" } }}
           >
@@ -267,7 +313,10 @@ const DashboardPage: React.FC = () => {
             margin="normal"
             value={newTask.status}
             onChange={(e) =>
-              setNewTask({ ...newTask, status: e.target.value as "todo" | "inProgress" | "done" })
+              setNewTask({
+                ...newTask,
+                status: e.target.value as "todo" | "inProgress" | "done",
+              })
             }
             InputLabelProps={{ style: { color: "#ccc" } }}
             InputProps={{ style: { color: "#f5f5f5" } }}

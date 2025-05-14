@@ -26,18 +26,7 @@ const VerticalLines: React.FC = () => {
           zIndex: 1200,
         }}
       />
-      <Box
-        sx={{
-          position: "fixed",
-          top: 0,
-          bottom: 0,
-          left: "50%",
-          transform: "translateX(-0.5px)",
-          width: "1px",
-          bgcolor: "#222",
-          zIndex: 1200,
-        }}
-      />
+      <Box />
     </>
   );
 };

@@ -54,7 +54,18 @@ namespace GoalTracker.API.Controllers
                 return Unauthorized(new { message = "Invalid email or password." });
 
             var token = GenerateJwtToken(user);
-            return Ok(new { user, token, message = "Login successful!" }); 
+            return Ok(new
+{
+    user = new
+    {
+        id = user.Id,
+        username = user.Username,
+        email = user.Email
+    },
+    token,
+    message = "Login successful!"
+});
+
         }
 
         private string GenerateJwtToken(User user)
