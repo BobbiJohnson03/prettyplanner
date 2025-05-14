@@ -1,0 +1,27 @@
+'Log files:
+C:\Users\Luiza\Documents\GitHub\prettyplanner\frontend\UsersLuizaAppDataLocalnpm-cache\_logs\2025-05-14T03_22_43_817Z-debug-0.log
+
+# npm resolution error report
+
+While resolving: @date-io/date-fns@3.2.1
+Found: date-fns@2.30.0
+node_modules/date-fns
+  peerOptional date-fns@"^2.25.0 || ^3.2.0 || ^4.0.0" from @mui/x-date-pickers@7.28.3
+  node_modules/@mui/x-date-pickers
+    @mui/x-date-pickers@"^7.28.3" from the root project
+  date-fns@"^2.30.0" from the root project
+
+Could not resolve dependency:
+peerOptional date-fns@"^3.2.0 || ^4.1.0" from @date-io/date-fns@3.2.1
+node_modules/@date-io/date-fns
+  @date-io/date-fns@"^3.2.1" from the root project
+
+Conflicting peer dependency: date-fns@4.1.0
+node_modules/date-fns
+  peerOptional date-fns@"^3.2.0 || ^4.1.0" from @date-io/date-fns@3.2.1
+  node_modules/@date-io/date-fns
+    @date-io/date-fns@"^3.2.1" from the root project
+
+Fix the upstream dependency conflict, or retry
+this command with --force or --legacy-peer-deps
+to accept an incorrect (and potentially broken) dependency resolution.

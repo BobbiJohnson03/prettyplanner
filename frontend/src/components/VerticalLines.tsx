@@ -11,7 +11,7 @@ const VerticalLines: React.FC = () => {
           bottom: 0,
           left: "calc((100% - 1490px) / 2)",
           width: "1px",
-          bgcolor: "#eaeaea",
+          bgcolor: "#222",
           zIndex: 1200,
         }}
       />
@@ -22,7 +22,7 @@ const VerticalLines: React.FC = () => {
           bottom: 0,
           right: "calc((100% - 1490px) / 2)",
           width: "1px",
-          bgcolor: "#eaeaea",
+          bgcolor: "#222",
           zIndex: 1200,
         }}
       />
@@ -34,7 +34,7 @@ const VerticalLines: React.FC = () => {
           left: "50%",
           transform: "translateX(-0.5px)",
           width: "1px",
-          bgcolor: "#eaeaea",
+          bgcolor: "#222",
           zIndex: 1200,
         }}
       />

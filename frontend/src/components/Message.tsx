@@ -8,7 +8,7 @@ const Message: React.FC = () => {
         sx={{
           fontWeight: 400,
           fontSize: { xs: "1.5rem", md: "2rem" },
-          color: "#444",
+          color: "#f5f5f5",
         }}
       >
         text text text

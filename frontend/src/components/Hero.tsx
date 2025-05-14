@@ -18,13 +18,13 @@ const Hero: React.FC = () => {
         sx={{
           fontSize: { xs: "2.5rem", md: "4.5rem" },
           fontWeight: 600,
-          color: "#111",
+          color: "#f5f5f5",
           mb: 2,
         }}
       >
         Landing Page
       </Typography>
-      <Typography sx={{ fontSize: "1rem", color: "#888" }}>new york</Typography>
+      <Typography sx={{ fontSize: "1rem", color: "#f5f5f5" }}>new york</Typography>
     </Box>
   );
 };

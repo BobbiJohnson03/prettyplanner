@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -8,6 +8,7 @@ import {
   DialogContent,
   TextField,
   MenuItem,
+  IconButton,
 } from "@mui/material";
 import {
   DragDropContext,
@@ -18,74 +19,127 @@ import {
 import { ChromePicker } from "react-color";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { useSelector } from "react-redux";
+import { RootState } from "../redux/store";
+import {
+  useGetTasksByUserQuery,
+  useAddTaskMutation,
+  useUpdateTaskMutation,
+  useDeleteTaskMutation,
+  KanbanTask,
+} from "../redux/kanbanApi";
 
-const initialData = {
+const initialData: Record<"todo" | "inProgress" | "done", KanbanTask[]> = {
   todo: [],
   inProgress: [],
   done: [],
 };
 
-interface KanbanTask {
-  title: string;
-  description: string;
-  deadline: Dayjs | null;
-  priority: string;
-  status: "todo" | "inProgress" | "done";
-  color: string;
-}
-
 const DashboardPage: React.FC = () => {
-  const [columns, setColumns] =
-    useState<Record<string, KanbanTask[]>>(initialData);
+  const user = useSelector((state: RootState) => state.auth.user);
+  const userId = user?._id;
+
+  const {
+    data: tasks = [],
+    refetch,
+    isFetching,
+  } = useGetTasksByUserQuery(userId!, {
+    skip: !userId,
+  });
+
+  const [addTask] = useAddTaskMutation();
+  const [updateTask] = useUpdateTaskMutation();
+  const [deleteTask] = useDeleteTaskMutation();
+
+  const [columns, setColumns] = useState(initialData);
   const [open, setOpen] = useState(false);
-  const [newTask, setNewTask] = useState<KanbanTask>({
+  const [newTask, setNewTask] = useState<{
+    title: string;
+    description: string;
+    deadline: Dayjs | null;
+    priority: string;
+    status: "todo" | "inProgress" | "done";
+    color: string;
+  }>({
     title: "",
     description: "",
     deadline: null,
-    priority: "",
+    priority: "medium",
     status: "todo",
     color: "#FFCDD2",
   });
 
-  const handleDragEnd = (result: DropResult) => {
+  // 🔁 aktualizuj kolumny tylko kiedy zadania się zmienią (unikamy nieskończonego loopa)
+  useEffect(() => {
+    const mapped: Record<"todo" | "inProgress" | "done", KanbanTask[]> = {
+      todo: [],
+      inProgress: [],
+      done: [],
+    };
+    tasks.forEach((task) => {
+      mapped[task.status].push(task);
+    });
+    setColumns(mapped);
+  }, [tasks]);
+
+  const handleAddTask = async () => {
+    if (!userId) return;
+
+    try {
+      await addTask({
+        ...newTask,
+        userId,
+        createdAt: new Date().toISOString(),
+        deadline: newTask.deadline?.toISOString(),
+      }).unwrap();
+
+      await refetch(); // ⬅️ odśwież dane
+      setOpen(false);
+
+      setNewTask({
+        title: "",
+        description: "",
+        deadline: null,
+        priority: "medium",
+        status: "todo",
+        color: "#FFCDD2",
+      });
+    } catch (err) {
+      console.error("Error adding task:", err);
+    }
+  };
+
+  const handleDragEnd = async (result: DropResult) => {
     if (!result.destination) return;
 
-    const sourceCol = result.source.droppableId;
-    const destCol = result.destination.droppableId;
+    const sourceCol = result.source.droppableId as "todo" | "inProgress" | "done";
+    const destCol = result.destination.droppableId as "todo" | "inProgress" | "done";
 
-    const copiedTask = [...columns[sourceCol]];
-    const [removed] = copiedTask.splice(result.source.index, 1);
-    const updatedSource = copiedTask;
+    const task = columns[sourceCol][result.source.index];
+    const updatedTask = { ...task, status: destCol };
 
+    const updatedSource = [...columns[sourceCol]];
+    updatedSource.splice(result.source.index, 1);
     const updatedDest = [...columns[destCol]];
-    updatedDest.splice(result.destination.index, 0, removed);
+    updatedDest.splice(result.destination.index, 0, updatedTask);
 
     setColumns({
       ...columns,
       [sourceCol]: updatedSource,
       [destCol]: updatedDest,
     });
+
+    await updateTask({ id: task._id!, updated: updatedTask });
   };
 
-  const handleAddTask = () => {
-    setColumns((prev) => ({
-      ...prev,
-      [newTask.status]: [...prev[newTask.status], newTask],
-    }));
-
-    setOpen(false);
-    setNewTask({
-      title: "",
-      description: "",
-      deadline: null,
-      priority: "medium",
-      status: "todo",
-      color: "#FFCDD2",
-    });
+  const handleDeleteTask = async (id: string) => {
+    await deleteTask(id);
+    await refetch(); // ⬅️ odśwież po usunięciu
   };
 
   return (
-    <Box display="flex" p={4} gap={3} alignItems="flex-start">
+    <Box display="flex" p={4} gap={3} alignItems="flex-start" sx={{ backgroundColor: "#181818", minHeight: "100vh" }}>
       <Button variant="contained" onClick={() => setOpen(true)}>
         Add Kanban Task
       </Button>
@@ -100,21 +154,17 @@ const DashboardPage: React.FC = () => {
                 sx={{
                   width: 300,
                   minHeight: 400,
-                  backgroundColor: "#f5f5f5",
+                  backgroundColor: "#1f1f1f",
                   borderRadius: 2,
                   p: 2,
                 }}
               >
-                <Typography variant="h6" align="center" fontWeight="bold">
+                <Typography variant="h6" align="center" fontWeight="bold" sx={{ color: "#f5f5f5" }}>
                   {status.toUpperCase()}
                 </Typography>
 
                 {tasks.map((task, index) => (
-                  <Draggable
-                    key={task.title + index}
-                    draggableId={task.title + index}
-                    index={index}
-                  >
+                  <Draggable key={task._id} draggableId={task._id!} index={index}>
                     {(provided) => (
                       <Box
                         ref={provided.innerRef}
@@ -129,20 +179,19 @@ const DashboardPage: React.FC = () => {
                           color: "#fff",
                         }}
                       >
-                        <Typography variant="body1">{task.title}</Typography>
+                        <Box display="flex" justifyContent="space-between" alignItems="center">
+                          <Typography variant="body1">{task.title}</Typography>
+                          <IconButton size="small" onClick={() => handleDeleteTask(task._id!)}>
+                            <DeleteIcon sx={{ color: "#fff" }} />
+                          </IconButton>
+                        </Box>
                         <Typography variant="body2" sx={{ fontSize: 12 }}>
                           {task.description}
                         </Typography>
                         <Typography variant="body2" sx={{ fontSize: 12 }}>
-                          {task.deadline
-                            ? `Due: ${task.deadline.format("YYYY-MM-DD")}`
-                            : "No deadline"}
+                          {task.deadline ? `Due: ${dayjs(task.deadline).format("YYYY-MM-DD")}` : "No deadline"}
                         </Typography>
-
-                        <Typography
-                          variant="caption"
-                          sx={{ fontWeight: "bold" }}
-                        >
+                        <Typography variant="caption" sx={{ fontWeight: "bold" }}>
                           Priority: {task.priority}
                         </Typography>
                       </Box>
@@ -156,20 +205,18 @@ const DashboardPage: React.FC = () => {
         ))}
       </DragDropContext>
 
-      <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>Add Kanban Task</DialogTitle>
-        <DialogContent>
+      {/* DIALOG */}
+      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ backgroundColor: "#121212", color: "#f5f5f5" }}>Add Kanban Task</DialogTitle>
+        <DialogContent sx={{ backgroundColor: "#1c1c1c" }}>
           <TextField
             label="Title"
             fullWidth
             margin="normal"
             value={newTask.title}
             onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+            InputLabelProps={{ style: { color: "#ccc" } }}
+            InputProps={{ style: { color: "#f5f5f5" } }}
           />
 
           <TextField
@@ -179,18 +226,23 @@ const DashboardPage: React.FC = () => {
             multiline
             rows={3}
             value={newTask.description}
-            onChange={(e) =>
-              setNewTask({ ...newTask, description: e.target.value })
-            }
+            onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+            InputLabelProps={{ style: { color: "#ccc" } }}
+            InputProps={{ style: { color: "#f5f5f5" } }}
           />
 
           <DatePicker
             label="Deadline"
             value={newTask.deadline}
-            onChange={(newDate) =>
-              setNewTask({ ...newTask, deadline: newDate })
-            }
-            slotProps={{ textField: { fullWidth: true, margin: "normal" } }}
+            onChange={(newDate) => setNewTask({ ...newTask, deadline: newDate })}
+            slotProps={{
+              textField: {
+                fullWidth: true,
+                margin: "normal",
+                InputLabelProps: { style: { color: "#ccc" } },
+                InputProps: { style: { color: "#f5f5f5" } },
+              },
+            }}
           />
 
           <TextField
@@ -199,9 +251,9 @@ const DashboardPage: React.FC = () => {
             fullWidth
             margin="normal"
             value={newTask.priority}
-            onChange={(e) =>
-              setNewTask({ ...newTask, priority: e.target.value })
-            }
+            onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+            InputLabelProps={{ style: { color: "#ccc" } }}
+            InputProps={{ style: { color: "#f5f5f5" } }}
           >
             <MenuItem value="low">Low</MenuItem>
             <MenuItem value="medium">Medium</MenuItem>
@@ -215,20 +267,18 @@ const DashboardPage: React.FC = () => {
             margin="normal"
             value={newTask.status}
             onChange={(e) =>
-              setNewTask({
-                ...newTask,
-                status: e.target.value as KanbanTask["status"],
-              })
+              setNewTask({ ...newTask, status: e.target.value as "todo" | "inProgress" | "done" })
             }
+            InputLabelProps={{ style: { color: "#ccc" } }}
+            InputProps={{ style: { color: "#f5f5f5" } }}
           >
             <MenuItem value="todo">To Do</MenuItem>
             <MenuItem value="inProgress">In Progress</MenuItem>
             <MenuItem value="done">Done</MenuItem>
           </TextField>
 
-          {/* Color Picker */}
           <Box mt={2}>
-            <Typography variant="body1" sx={{ mb: 1 }}>
+            <Typography variant="body1" sx={{ mb: 1, color: "#f5f5f5" }}>
               Choose Task Color:
             </Typography>
             <ChromePicker

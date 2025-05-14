@@ -1,14 +1,21 @@
 import React from "react";
 import { Typography, Container, Paper } from "@mui/material";
 import { useSelector } from "react-redux";
-import { RootState } from "../redux/store"; // Make sure you have this type
+import { RootState } from "../redux/store";
 
 const MyProfile: React.FC = () => {
   const user = useSelector((state: RootState) => state.auth.user);
 
   return (
     <Container maxWidth="sm" sx={{ py: 8 }}>
-      <Paper sx={{ p: 4, borderRadius: 3 }}>
+      <Paper
+        sx={{
+          p: 4,
+          borderRadius: 3,
+          bgcolor: "background.paper",
+          color: "text.primary",
+        }}
+      >
         <Typography variant="h4" gutterBottom>
           Twój profil
         </Typography>
@@ -32,3 +39,4 @@ const MyProfile: React.FC = () => {
 };
 
 export default MyProfile;
+

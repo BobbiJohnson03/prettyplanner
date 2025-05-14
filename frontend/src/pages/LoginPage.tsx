@@ -36,8 +36,6 @@ const LoginPage: React.FC = () => {
       localStorage.setItem("token", token);
       dispatch(setUser({ user, token }));
       navigate("/");
-
-      navigate("/");
     } catch (error: unknown) {
       if (typeof error === "object" && error !== null && "data" in error) {
         const err = error as FetchBaseQueryError;
@@ -55,7 +53,13 @@ const LoginPage: React.FC = () => {
     <Container maxWidth="sm">
       <Paper
         elevation={3}
-        sx={{ mt: 10, p: 4, borderRadius: 3, backgroundColor: "#fff" }}
+        sx={{
+          mt: 10,
+          p: 4,
+          borderRadius: 3,
+          bgcolor: "background.paper",
+          color: "text.primary",
+        }}
       >
         <Typography variant="h4" sx={{ mb: 3, textAlign: "center" }}>
           Logowanie
@@ -69,6 +73,8 @@ const LoginPage: React.FC = () => {
             fullWidth
             required
             sx={{ mb: 2 }}
+            InputLabelProps={{ style: { color: "#ccc" } }}
+            InputProps={{ style: { color: "#f5f5f5" } }}
           />
           <TextField
             label="Hasło"
@@ -78,6 +84,8 @@ const LoginPage: React.FC = () => {
             fullWidth
             required
             sx={{ mb: 2 }}
+            InputLabelProps={{ style: { color: "#ccc" } }}
+            InputProps={{ style: { color: "#f5f5f5" } }}
           />
           {message && (
             <Typography color="error" sx={{ mb: 2 }}>
@@ -95,7 +103,7 @@ const LoginPage: React.FC = () => {
             {isLoading ? "Logowanie..." : "Zaloguj się"}
           </Button>
         </form>
-        <Typography sx={{ mt: 2, textAlign: "center" }}>
+        <Typography sx={{ mt: 2, textAlign: "center", color: "text.secondary" }}>
           Nie masz konta?{" "}
           <Link
             component={RouterLink}

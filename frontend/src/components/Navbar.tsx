@@ -18,7 +18,6 @@ import "./Navbar.css";
 export default function Navbar() {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-
   const user = useSelector((state: RootState) => state.auth?.user);
 
   useEffect(() => {
@@ -41,8 +40,9 @@ export default function Navbar() {
       color="transparent"
       elevation={0}
       sx={{
-        borderBottom: "1px solid #eaeaea",
-        backgroundColor: "#ffffff",
+        borderBottom: "1px solid #333",
+        backgroundColor: "#181818",
+        color: "#f5f5f5",
       }}
     >
       <Toolbar sx={{ justifyContent: "center", py: 2 }}>
@@ -52,12 +52,20 @@ export default function Navbar() {
           <IconButton component={RouterLink} to="/" color="inherit">
             <HomeIcon />
           </IconButton>
+
+          {/* My Dashboard button — disabled if no user */}
           <Button
-            component={RouterLink}
-            to="/dashboard"
+            component={user ? RouterLink : "button"}
+            to={user ? "/dashboard" : undefined}
             className="nav-link nav-pink"
             color="inherit"
-            sx={{ textTransform: "none" }}
+            sx={{
+              textTransform: "none",
+              opacity: user ? 1 : 0.4,
+              pointerEvents: user ? "auto" : "none",
+              cursor: user ? "pointer" : "not-allowed",
+            }}
+            disabled={!user}
           >
             My Dashboard
           </Button>
@@ -96,6 +104,7 @@ export default function Navbar() {
             </Button>
           )}
 
+          {/* Profile icon — disabled if no user */}
           <IconButton
             color="inherit"
             component={user ? RouterLink : "button"}

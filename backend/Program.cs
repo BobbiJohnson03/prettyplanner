@@ -22,6 +22,12 @@ builder.Services.AddSingleton<CategoryService>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSingleton<NotificationService>();
+builder.Services.AddSingleton<SummaryService>();
+builder.Services.AddSingleton<KanbanTaskService>();
+
+
+
 
 
 builder.Services.AddCors(options =>

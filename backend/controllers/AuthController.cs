@@ -7,14 +7,22 @@ using System.Security.Claims;
 using System.Text;
 using BCrypt.Net;
 
+/*
+authentication controller for user registration and login
+also responsible for generating JWT tokens
+*/
 namespace GoalTracker.API.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
+    [ApiController] // This attribute indicates that this class is a controller for handling HTTP requests, RESTful API requests.
+    [Route("api/[controller]")] // This attribute defines the route for this controller, allowing it to handle requests to "api/auth".
+
     public class AuthController : ControllerBase
     {
         private readonly UserService _userService;
+        // dependency injection for user service and configuration
+        // user service is used to interact with the user database
         private readonly IConfiguration _configuration;
+        // IConfiguration = reads config like JWT secret from appsettings.json
 
         public AuthController(UserService userService, IConfiguration configuration)
         {
@@ -22,6 +30,7 @@ namespace GoalTracker.API.Controllers
             _configuration = configuration;
         }
 
+        // POST api/auth/register
         [HttpPost("register")]
         public async Task<IActionResult> Register(User user)
         {
@@ -29,8 +38,10 @@ namespace GoalTracker.API.Controllers
             if (existing != null)
                 return Conflict("Email already in use.");
 
+            // hashing the password before storing it in the database
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
             await _userService.CreateAsync(user);
+            // await - wait until the user  is fully ssved to the database
 
             return Ok(new { message = "User registered successfully." });
         }
@@ -43,7 +54,7 @@ namespace GoalTracker.API.Controllers
                 return Unauthorized(new { message = "Invalid email or password." });
 
             var token = GenerateJwtToken(user);
-            return Ok(new { user, token, message = "Login successful!" });
+            return Ok(new { user, token, message = "Login successful!" }); 
         }
 
         private string GenerateJwtToken(User user)
@@ -72,3 +83,4 @@ namespace GoalTracker.API.Controllers
         }
     }
 }
+  

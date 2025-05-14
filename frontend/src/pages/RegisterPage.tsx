@@ -9,7 +9,6 @@ import {
 } from "@mui/material";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { useRegisterUserMutation } from "../redux/authApi";
-//import { useAppSelector, useAppDispatch } from "../redux/hooks";
 
 interface RegisterForm {
   username: string;
@@ -58,7 +57,13 @@ const RegisterPage: React.FC = () => {
     <Container maxWidth="sm">
       <Paper
         elevation={3}
-        sx={{ mt: 10, p: 4, borderRadius: 3, backgroundColor: "#fff" }}
+        sx={{
+          mt: 10,
+          p: 4,
+          borderRadius: 3,
+          bgcolor: "background.paper",
+          color: "text.primary",
+        }}
       >
         <Typography variant="h4" sx={{ mb: 3, textAlign: "center" }}>
           Rejestracja
@@ -72,6 +77,8 @@ const RegisterPage: React.FC = () => {
             onChange={handleChange}
             sx={{ mb: 2 }}
             required
+            InputLabelProps={{ style: { color: "#ccc" } }}
+            InputProps={{ style: { color: "#f5f5f5" } }}
           />
           <TextField
             name="email"
@@ -81,6 +88,8 @@ const RegisterPage: React.FC = () => {
             onChange={handleChange}
             sx={{ mb: 2 }}
             required
+            InputLabelProps={{ style: { color: "#ccc" } }}
+            InputProps={{ style: { color: "#f5f5f5" } }}
           />
           <TextField
             name="password"
@@ -91,6 +100,8 @@ const RegisterPage: React.FC = () => {
             onChange={handleChange}
             sx={{ mb: 2 }}
             required
+            InputLabelProps={{ style: { color: "#ccc" } }}
+            InputProps={{ style: { color: "#f5f5f5" } }}
           />
           <TextField
             name="confirmPassword"
@@ -101,6 +112,8 @@ const RegisterPage: React.FC = () => {
             onChange={handleChange}
             sx={{ mb: 2 }}
             required
+            InputLabelProps={{ style: { color: "#ccc" } }}
+            InputProps={{ style: { color: "#f5f5f5" } }}
           />
           {error && (
             <Typography color="error" sx={{ mb: 2 }}>
@@ -117,7 +130,7 @@ const RegisterPage: React.FC = () => {
             Zarejestruj się
           </Button>
         </form>
-        <Typography sx={{ mt: 2, textAlign: "center" }}>
+        <Typography sx={{ mt: 2, textAlign: "center", color: "text.secondary" }}>
           Masz już konto?{" "}
           <Link
             component={RouterLink}

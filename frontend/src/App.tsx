@@ -19,14 +19,17 @@ const theme = createTheme({
   typography: {
     fontFamily: "Inter, sans-serif",
   },
-  palette: {
-    background: {
-      default: "#fff",
-    },
-    text: {
-      primary: "#000",
-    },
+ palette: {
+  mode: "dark",
+  background: {
+    default: "#181818",
+    paper: "#1c1c1c",
   },
+  text: {
+    primary: "#f5f5f5",
+    secondary: "#aaaaaa",
+  },
+}
 });
 
 const App: React.FC = () => {
