@@ -5,7 +5,7 @@ const Footer: React.FC = () => {
   return (
     <Box textAlign="center" py={4}>
       <Typography variant="body2" sx={{ fontSize: "0.8rem", color: "#aaaaaa" }}>
-        Let’s talk →{" "}
+        wanna talk? email us: →{" "}
         <Link
           href="mailto:luiza.a.lukasik@outlook.com"
           underline="hover"

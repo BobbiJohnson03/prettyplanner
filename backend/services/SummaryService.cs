@@ -2,6 +2,7 @@ using GoalTracker.API.Models;
 using GoalTracker.API.Settings;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+// using System.Globalization; // Niepotrzebne jeśli zakomentowane metody są nieużywane
 
 namespace GoalTracker.API.Services
 {
@@ -28,24 +29,51 @@ namespace GoalTracker.API.Services
             return (int)await _tasks.CountDocumentsAsync(t => t.UserId == userId && t.Status.ToLower() == "done");
         }
 
-        public async Task<Dictionary<string, int>> GetGoalCompletionsByDayAsync(string userId)
-        {
-            var goals = await _goals.Find(g => g.UserId == userId && g.IsCompleted).ToListAsync();
+        // 🔒 Tymczasowo zakomentowane — powodowały błędy przy kompilacji
+        // public async Task<Dictionary<string, int>> GetGoalCompletionsByDayAsync(string userId)
+        // {
+        //     var goals = await _goals
+        //         .Find(g => g.UserId == userId && g.IsCompleted)
+        //         .ToListAsync();
 
-            return goals
-                .Where(g => DateTime.TryParse(g.CreatedAt, out _))
-                .GroupBy(g => DateTime.Parse(g.CreatedAt).Date)
-                .ToDictionary(g => g.Key.ToShortDateString(), g => g.Count());
-        }
+        //     var grouped = new Dictionary<string, int>();
 
-        public async Task<Dictionary<string, int>> GetTaskCompletionsByDayAsync(string userId)
-        {
-            var tasks = await _tasks.Find(t => t.UserId == userId && t.Status.ToLower() == "done").ToListAsync();
+        //     foreach (var goal in goals)
+        //     {
+        //         if (DateTime.TryParse(goal.CreatedAt, out var date))
+        //         {
+        //             var key = date.ToString("yyyy-MM-dd");
+        //             if (grouped.ContainsKey(key))
+        //                 grouped[key]++;
+        //             else
+        //                 grouped[key] = 1;
+        //         }
+        //     }
 
-            return tasks
-                .Where(t => DateTime.TryParse(t.CreatedAt, out _))
-                .GroupBy(t => DateTime.Parse(t.CreatedAt).Date)
-                .ToDictionary(g => g.Key.ToShortDateString(), g => g.Count());
-        }
+        //     return grouped;
+        // }
+
+        // public async Task<Dictionary<string, int>> GetTaskCompletionsByDayAsync(string userId)
+        // {
+        //     var tasks = await _tasks
+        //         .Find(t => t.UserId == userId && t.Status.ToLower() == "done")
+        //         .ToListAsync();
+
+        //     var grouped = new Dictionary<string, int>();
+
+        //     foreach (var task in tasks)
+        //     {
+        //         if (DateTime.TryParse(task.CreatedAt, out var date))
+        //         {
+        //             var key = date.ToString("yyyy-MM-dd");
+        //             if (grouped.ContainsKey(key))
+        //                 grouped[key]++;
+        //             else
+        //                 grouped[key] = 1;
+        //         }
+        //     }
+
+        //     return grouped;
+        // }
     }
 }

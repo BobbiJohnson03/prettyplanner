@@ -7,11 +7,11 @@ const Message: React.FC = () => {
       <Typography
         sx={{
           fontWeight: 400,
-          fontSize: { xs: "1.5rem", md: "2rem" },
+          fontSize: { xs: "1rem", md: "2rem" },
           color: "#f5f5f5",
         }}
       >
-        text text text
+        more info coming soon
       </Typography>
     </Box>
   );

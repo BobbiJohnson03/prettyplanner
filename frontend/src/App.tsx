@@ -14,22 +14,23 @@ import MyProfile from "./pages/MyProfile";
 import DashboardPage from "./pages/DashboardPage.tsx";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import About from "./components/About";
 
 const theme = createTheme({
   typography: {
     fontFamily: "Inter, sans-serif",
   },
- palette: {
-  mode: "dark",
-  background: {
-    default: "#181818",
-    paper: "#1c1c1c",
+  palette: {
+    mode: "dark",
+    background: {
+      default: "#181818",
+      paper: "#1c1c1c",
+    },
+    text: {
+      primary: "#f5f5f5",
+      secondary: "#aaaaaa",
+    },
   },
-  text: {
-    primary: "#f5f5f5",
-    secondary: "#aaaaaa",
-  },
-}
 });
 
 const App: React.FC = () => {
@@ -47,6 +48,7 @@ const App: React.FC = () => {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/profile" element={<MyProfile />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/about" element={<About />} />
         </Routes>
       </ThemeProvider>
     </LocalizationProvider>

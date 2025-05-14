@@ -8,54 +8,72 @@ import Footer from "../components/Footer";
 const LandingPage: React.FC = () => {
   return (
     <>
-      {/* 🗽 TYTUŁ PRZED ANIMACJĄ */}
+      {/* 🌀 ANIMACJA + TEKST W TLE */}
       <Box
         sx={{
+          position: "relative",
           backgroundColor: "#181818",
-          pt: 8, // zmniejszony padding top
-          pb: 4, // zmniejszony padding bottom
-          textAlign: "center",
+          height: "1200px",
+          overflow: "hidden",
         }}
       >
-        <Typography
-          variant="h2"
-          sx={{
-            fontWeight: "bold",
-            color: "#f5f5f5",
-          }}
-        >
-          Welcome to Pretty Planner
-        </Typography>
-        <Typography
-          variant="subtitle1"
-          sx={{
-            color: "#ccc",
-            mt: 2,
-            maxWidth: "600px",
-            mx: "auto",
-          }}
-        >
-          Where productivity meets beauty — and your day finds its rhythm.
-        </Typography>
-      </Box>
-
-      {/* 🌀 ANIMACJA SANDBALL */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "#181818",
-          py: 6,
-        }}
-      >
+        {/* TEKST Z TYŁU */}
         <Box
           sx={{
-            width: "100vw", // pełna szerokość ekranu
-            height: "1000px", // lub np. "100vh" jeśli chcesz pełen ekran
-            borderRadius: 0, // bez zaokrągleń jeśli chcesz pełne dopasowanie
-            overflow: "hidden",
-            boxShadow: 5,
+            position: "absolute",
+            top: "10%",
+            width: "100%",
+            textAlign: "center",
+            zIndex: 1,
+            px: 2,
+          }}
+        >
+          <Typography
+            variant="h2"
+            sx={{
+              fontWeight: "bold",
+              color: "#f5f5f5",
+            }}
+          >
+            Welcome to Pretty Planner
+          </Typography>
+
+          <Typography
+            variant="h5"
+            sx={{
+              color: "#ccc",
+              mt: 2,
+              maxWidth: "700px",
+              mx: "auto",
+              lineHeight: 1.6,
+              fontWeight: 400,
+            }}
+          >
+            Enjoy us and get into zen mode 🧘‍♀️: less stress, more flow.
+          </Typography>
+
+          <Typography
+            variant="subtitle1"
+            sx={{
+              color: "#bbb",
+              mt: 1,
+              maxWidth: "700px",
+              mx: "auto",
+              fontSize: "1.2rem",
+              lineHeight: 1.6,
+            }}
+          >
+            Plan your time with clarity, ease, and a little bit of beauty.
+          </Typography>
+        </Box>
+
+        {/* KULKA Z PRZODU */}
+        <Box
+          sx={{
+            position: "relative",
+            width: "100%",
+            height: "100%",
+            zIndex: 2,
           }}
         >
           <iframe
@@ -69,11 +87,6 @@ const LandingPage: React.FC = () => {
       </Box>
 
       {/* POZOSTAŁE SEKCJE */}
-      <Box sx={{ borderBottom: "1px solid #eaeaea", py: 10 }}>
-        <Container maxWidth="md">
-          <Hero />
-        </Container>
-      </Box>
       <Box sx={{ borderBottom: "1px solid #eaeaea", py: 10 }}>
         <Container maxWidth="md">
           <About />

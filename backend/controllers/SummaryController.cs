@@ -28,18 +28,19 @@ namespace GoalTracker.API.Controllers
             return Ok(new { completedTasks = count });
         }
 
-        [HttpGet("goals/{userId}/completions-by-day")]
-        public async Task<IActionResult> GetGoalCompletionsByDay(string userId)
-        {
-            var data = await _summaryService.GetGoalCompletionsByDayAsync(userId);
-            return Ok(data);
-        }
+        // 🔒 Tymczasowo zakomentowane — metody są nieaktywne
+        // [HttpGet("goals/{userId}/completions-by-day")]
+        // public async Task<IActionResult> GetGoalCompletionsByDay(string userId)
+        // {
+        //     var data = await _summaryService.GetGoalCompletionsByDayAsync(userId);
+        //     return Ok(data);
+        // }
 
-        [HttpGet("tasks/{userId}/completions-by-day")]
-        public async Task<IActionResult> GetTaskCompletionsByDay(string userId)
-        {
-            var data = await _summaryService.GetTaskCompletionsByDayAsync(userId);
-            return Ok(data);
-        }
+        // [HttpGet("tasks/{userId}/completions-by-day")]
+        // public async Task<IActionResult> GetTaskCompletionsByDay(string userId)
+        // {
+        //     var data = await _summaryService.GetTaskCompletionsByDayAsync(userId);
+        //     return Ok(data);
+        // }
     }
 }
