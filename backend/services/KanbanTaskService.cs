@@ -30,5 +30,15 @@ namespace GoalTracker.API.Services
 
         public async Task DeleteAsync(string id) =>
             await _tasks.DeleteOneAsync(t => t.Id == id);
+
+            public async Task DeleteByCategoryAsync(string userId, string categoryName)
+{
+    var filter = Builders<KanbanTask>.Filter.Eq(t => t.UserId, userId) &
+                 Builders<KanbanTask>.Filter.Eq(t => t.Category, categoryName);
+
+    await _tasks.DeleteManyAsync(filter);
+
+}
+
     }
 }

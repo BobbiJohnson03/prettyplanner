@@ -33,25 +33,26 @@ namespace GoalTracker.API.Controllers
         }
 
         // POST: api/kanbantasks
-        [HttpPost]
-        public async Task<IActionResult> Post(KanbanTask task)
-        {
-            await _kanbanTaskService.CreateAsync(task);
-            return CreatedAtAction(nameof(Get), new { id = task.Id }, task);
-        }
+       [HttpPost]
+public async Task<IActionResult> Post(KanbanTask task)
+{
+    task.CreatedAt = DateTime.UtcNow;  // Ensure createdAt is set
+    await _kanbanTaskService.CreateAsync(task);
+    return CreatedAtAction(nameof(Get), new { id = task.Id }, task);
+}
 
         // PUT: api/kanbantasks/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Put(string id, KanbanTask task)
-        {
-            var existing = await _kanbanTaskService.GetByIdAsync(id);
-            if (existing == null) return NotFound();
+   [HttpPut("{id}")]
+public async Task<IActionResult> Put(string id, KanbanTask task)
+{
+    var existing = await _kanbanTaskService.GetByIdAsync(id);
+    if (existing == null) return NotFound();
 
-            task.Id = id;
-            await _kanbanTaskService.UpdateAsync(id, task);
-            return NoContent();
-        }
-
+    task.Id = id;
+    task.CreatedAt = existing.CreatedAt;  // Preserve original creation date
+    await _kanbanTaskService.UpdateAsync(id, task);
+    return NoContent();
+}
         // DELETE: api/kanbantasks/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)

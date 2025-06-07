@@ -10,18 +10,13 @@ import {
   MenuItem,
   IconButton,
 } from "@mui/material";
-import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-  DropResult,
-} from "@hello-pangea/dnd";
-import { ChromePicker } from "react-color";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditNoteIcon from "@mui/icons-material/EditNote";
 import { useSelector } from "react-redux";
 import { RootState } from "../redux/store";
+
 import {
   useGetTasksByUserQuery,
   useAddTaskMutation,
@@ -29,6 +24,28 @@ import {
   useDeleteTaskMutation,
   KanbanTask,
 } from "../redux/kanbanApi";
+
+import {
+  useGetCategoriesByUserQuery,
+  useAddCategoryMutation,
+  useDeleteCategoryMutation,
+  useUpdateCategoryMutation,
+} from "../redux/categoryApi";
+
+const predefinedColors = [
+  "#D32F2F",
+  "#F57C00",
+  "#FBC02D",
+  "#388E3C",
+  "#00796B",
+  "#0288D1",
+  "#1976D2",
+  "#303F9F",
+  "#7B1FA2",
+  "#C2185B",
+  "#5D4037",
+  "#616161",
+];
 
 const initialData: Record<"todo" | "inProgress" | "done", KanbanTask[]> = {
   todo: [],
@@ -43,13 +60,26 @@ const DashboardPage: React.FC = () => {
   const { data: tasks = [], refetch } = useGetTasksByUserQuery(userId!, {
     skip: !userId,
   });
+  const { data: categories = [], refetch: refetchCategories } =
+    useGetCategoriesByUserQuery(userId!, { skip: !userId });
 
+  const [addCategory] = useAddCategoryMutation();
+  const [updateCategory] = useUpdateCategoryMutation();
+  const [deleteCategory] = useDeleteCategoryMutation();
   const [addTask] = useAddTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
   const [deleteTask] = useDeleteTaskMutation();
 
   const [columns, setColumns] = useState(initialData);
   const [open, setOpen] = useState(false);
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [categoryName, setCategoryName] = useState("");
+  const [categoryColor, setCategoryColor] = useState("#FFCDD2");
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
+    null
+  );
+
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
@@ -57,6 +87,7 @@ const DashboardPage: React.FC = () => {
     priority: "medium",
     status: "todo" as "todo" | "inProgress" | "done",
     color: "#FFCDD2",
+    category: "",
   });
 
   useEffect(() => {
@@ -89,38 +120,11 @@ const DashboardPage: React.FC = () => {
         priority: "medium",
         status: "todo",
         color: "#FFCDD2",
+        category: "",
       });
     } catch (err) {
       console.error("Error adding task:", err);
     }
-  };
-
-  const handleDragEnd = async (result: DropResult) => {
-    if (!result.destination) return;
-    const sourceCol = result.source.droppableId as
-      | "todo"
-      | "inProgress"
-      | "done";
-    const destCol = result.destination.droppableId as
-      | "todo"
-      | "inProgress"
-      | "done";
-
-    const task = columns[sourceCol][result.source.index];
-    const updatedTask = { ...task, status: destCol };
-
-    const updatedSource = [...columns[sourceCol]];
-    updatedSource.splice(result.source.index, 1);
-    const updatedDest = [...columns[destCol]];
-    updatedDest.splice(result.destination.index, 0, updatedTask);
-
-    setColumns({
-      ...columns,
-      [sourceCol]: updatedSource,
-      [destCol]: updatedDest,
-    });
-
-    await updateTask({ id: task.id, updated: updatedTask });
   };
 
   const handleDeleteTask = async (id: string) => {
@@ -128,9 +132,43 @@ const DashboardPage: React.FC = () => {
     await refetch();
   };
 
+  const handleDeleteCategory = async (id: string) => {
+    try {
+      await deleteCategory(id).unwrap();
+      await refetchCategories();
+      await refetch();
+    } catch (error) {
+      console.error("Failed to delete category:", error);
+    }
+  };
+
+  const handleSaveCategory = async () => {
+    if (!userId || !categoryName) return;
+    try {
+      if (editingCategoryId) {
+        await updateCategory({
+          id: editingCategoryId,
+          updated: { name: categoryName, color: categoryColor },
+        }).unwrap();
+      } else {
+        await addCategory({
+          name: categoryName,
+          color: categoryColor,
+          userId,
+        }).unwrap();
+      }
+      await refetchCategories();
+      setCategoryName("");
+      setCategoryColor("#FFCDD2");
+      setEditingCategoryId(null);
+      setShowCategoryForm(false);
+    } catch (error) {
+      console.error("Failed to save category:", error);
+    }
+  };
+
   return (
     <Box sx={{ backgroundColor: "#181818", minHeight: "100vh", py: 4, px: 2 }}>
-      {/* Top Button */}
       <Box display="flex" justifyContent="center" mb={4}>
         <Button
           variant="outlined"
@@ -155,96 +193,93 @@ const DashboardPage: React.FC = () => {
         </Button>
       </Box>
 
-      {/* Kanban Columns */}
       <Box display="flex" justifyContent="center" gap={3} flexWrap="wrap">
-        <DragDropContext onDragEnd={handleDragEnd}>
-          {Object.entries(columns).map(([status, tasks]) => (
-            <Droppable droppableId={status} key={status}>
-              {(provided) => (
-                <Box
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  sx={{
-                    width: 300,
-                    minHeight: 400,
-                    backgroundColor: "#1f1f1f",
-                    borderRadius: 2,
-                    p: 2,
-                  }}
-                >
-                  <Typography
-                    variant="h6"
-                    align="center"
-                    fontWeight="bold"
-                    sx={{ color: "#f5f5f5" }}
-                  >
-                    {status.toUpperCase()}
-                  </Typography>
-
-                  {tasks.map((task, index) => (
-                    <Draggable
-                      key={task.id}
-                      draggableId={task.id}
-                      index={index}
+        {Object.entries(columns).map(([status, tasks]) => (
+          <Box
+            key={status}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={() => {
+              if (!draggedTaskId) return;
+              const sourceCol = Object.entries(columns).find(([_, tasks]) =>
+                tasks.some((task) => task.id === draggedTaskId)
+              )?.[0] as "todo" | "inProgress" | "done";
+              if (!sourceCol) return;
+              const draggedTask = columns[sourceCol].find(
+                (t) => t.id === draggedTaskId
+              );
+              if (!draggedTask) return;
+              const updatedTask = { ...draggedTask, status };
+              updateTask({ id: draggedTask.id, updated: updatedTask });
+              setColumns((prev) => ({
+                ...prev,
+                [sourceCol]: prev[sourceCol].filter(
+                  (t) => t.id !== draggedTaskId
+                ),
+                [status]: [...prev[status], updatedTask],
+              }));
+              setDraggedTaskId(null);
+            }}
+            sx={{
+              width: 300,
+              minHeight: 400,
+              backgroundColor: "#1f1f1f",
+              borderRadius: 2,
+              p: 2,
+            }}
+          >
+            <Typography variant="h6" align="center" sx={{ color: "#f5f5f5" }}>
+              {status.toUpperCase()}
+            </Typography>
+            {tasks.map((task) => (
+              <Box
+                key={task.id}
+                draggable
+                onDragStart={() => setDraggedTaskId(task.id)}
+                sx={{
+                  p: 2,
+                  m: 1,
+                  backgroundColor: task.color || "#ccc",
+                  borderRadius: 2,
+                  color: "#fff",
+                  fontWeight: 500,
+                  cursor: "grab",
+                }}
+              >
+                <Box display="flex" justifyContent="space-between">
+                  <Typography>{task.title}</Typography>
+                  <Box>
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        console.log("TODO: Open edit modal for", task.id);
+                      }}
                     >
-                      {(provided) => (
-                        <Box
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          sx={{
-                            p: 2,
-                            m: 1,
-                            backgroundColor: task.color || "#ccc",
-                            borderRadius: 2,
-                            fontWeight: 500,
-                            color: "#fff",
-                          }}
-                        >
-                          <Box
-                            display="flex"
-                            justifyContent="space-between"
-                            alignItems="center"
-                          >
-                            <Typography variant="body1">
-                              {task.title}
-                            </Typography>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleDeleteTask(task.id)}
-                            >
-                              <DeleteIcon sx={{ color: "#fff" }} />
-                            </IconButton>
-                          </Box>
-                          <Typography variant="body2" sx={{ fontSize: 12 }}>
-                            {task.description}
-                          </Typography>
-                          <Typography variant="body2" sx={{ fontSize: 12 }}>
-                            {task.deadline
-                              ? `Due: ${dayjs(task.deadline).format(
-                                  "YYYY-MM-DD"
-                                )}`
-                              : "No deadline"}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            sx={{ fontWeight: "bold" }}
-                          >
-                            Priority: {task.priority}
-                          </Typography>
-                        </Box>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
+                      <EditNoteIcon sx={{ color: "#fff" }} />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDeleteTask(task.id)}
+                    >
+                      <DeleteIcon sx={{ color: "#fff" }} />
+                    </IconButton>
+                  </Box>
                 </Box>
-              )}
-            </Droppable>
-          ))}
-        </DragDropContext>
+                <Typography variant="body2">{task.description}</Typography>
+                <Typography variant="body2">
+                  {task.deadline
+                    ? `Due: ${dayjs(task.deadline).format("YYYY-MM-DD")}`
+                    : "No deadline"}
+                </Typography>
+                <Typography variant="caption">
+                  Priority: {task.priority}{" "}
+                  {task.category && `(${task.category})`}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ))}
       </Box>
 
-      {/* Modal Dialog */}
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
@@ -267,9 +302,9 @@ const DashboardPage: React.FC = () => {
           <TextField
             label="Description"
             fullWidth
-            margin="normal"
             multiline
             rows={3}
+            margin="normal"
             value={newTask.description}
             onChange={(e) =>
               setNewTask({ ...newTask, description: e.target.value })
@@ -279,10 +314,9 @@ const DashboardPage: React.FC = () => {
           />
           <DatePicker
             label="Deadline"
+            disablePast
             value={newTask.deadline}
-            onChange={(newDate) =>
-              setNewTask({ ...newTask, deadline: newDate })
-            }
+            onChange={(date) => setNewTask({ ...newTask, deadline: date })}
             slotProps={{
               textField: {
                 fullWidth: true,
@@ -292,6 +326,135 @@ const DashboardPage: React.FC = () => {
               },
             }}
           />
+          <TextField
+            select
+            label="Category"
+            fullWidth
+            margin="normal"
+            value={newTask.category}
+            onChange={(e) => {
+              const cat = categories.find((c) => c.name === e.target.value);
+              if (cat) {
+                setNewTask({
+                  ...newTask,
+                  category: cat.name,
+                  color: cat.color,
+                });
+              }
+            }}
+            InputLabelProps={{ style: { color: "#ccc" } }}
+            InputProps={{ style: { color: "#f5f5f5" } }}
+          >
+            {categories.map((c) => (
+              <MenuItem key={c.id} value={c.name}>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  width="100%"
+                >
+                  <Box display="flex" alignItems="center">
+                    <Box
+                      sx={{
+                        width: 16,
+                        height: 16,
+                        borderRadius: "50%",
+                        backgroundColor: c.color,
+                        mr: 1,
+                      }}
+                    />
+                    {c.name}
+                  </Box>
+                  <Box>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCategoryName(c.name);
+                        setCategoryColor(c.color);
+                        setEditingCategoryId(c.id);
+                        setShowCategoryForm(true);
+                      }}
+                    >
+                      ✏️
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteCategory(c.id);
+                      }}
+                    >
+                      🗑️
+                    </IconButton>
+                  </Box>
+                </Box>
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <Button
+            onClick={() => {
+              setShowCategoryForm(!showCategoryForm);
+              if (!showCategoryForm) {
+                setEditingCategoryId(null);
+                setCategoryName("");
+                setCategoryColor("#FFCDD2");
+              }
+            }}
+            sx={{ color: "#90caf9", mt: 1 }}
+          >
+            {editingCategoryId ? "Edit Category" : "+ Add Category"}
+          </Button>
+
+          {showCategoryForm && (
+            <Box mt={2}>
+              <TextField
+                label="Category Name"
+                fullWidth
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+                margin="normal"
+                InputLabelProps={{ style: { color: "#ccc" } }}
+                InputProps={{ style: { color: "#f5f5f5" } }}
+              />
+              <Box display="flex" flexWrap="wrap" gap={1} mt={2}>
+                {predefinedColors.map((color) => (
+                  <Box
+                    key={color}
+                    onClick={() => setCategoryColor(color)}
+                    sx={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: "50%",
+                      backgroundColor: color,
+                      cursor: "pointer",
+                      border:
+                        categoryColor === color ? "2px solid #fff" : "none",
+                    }}
+                  />
+                ))}
+              </Box>
+              <TextField
+                label="Custom HEX"
+                value={categoryColor}
+                onChange={(e) => setCategoryColor(e.target.value)}
+                fullWidth
+                margin="normal"
+                InputLabelProps={{ style: { color: "#ccc" } }}
+                InputProps={{ style: { color: "#f5f5f5" } }}
+                sx={{ mt: 2 }}
+              />
+              <Button
+                variant="contained"
+                onClick={handleSaveCategory}
+                sx={{ mt: 2 }}
+              >
+                {editingCategoryId ? "Update Category" : "Save Category"}
+              </Button>
+            </Box>
+          )}
+
           <TextField
             select
             label="Priority"
@@ -308,6 +471,7 @@ const DashboardPage: React.FC = () => {
             <MenuItem value="medium">Medium</MenuItem>
             <MenuItem value="high">High</MenuItem>
           </TextField>
+
           <TextField
             select
             label="Status"
@@ -327,15 +491,7 @@ const DashboardPage: React.FC = () => {
             <MenuItem value="inProgress">In Progress</MenuItem>
             <MenuItem value="done">Done</MenuItem>
           </TextField>
-          <Box mt={2}>
-            <Typography variant="body1" sx={{ mb: 1, color: "#f5f5f5" }}>
-              Choose Task Color:
-            </Typography>
-            <ChromePicker
-              color={newTask.color}
-              onChange={(color) => setNewTask({ ...newTask, color: color.hex })}
-            />
-          </Box>
+
           <Button
             variant="contained"
             color="primary"

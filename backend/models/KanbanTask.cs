@@ -7,15 +7,21 @@ namespace GoalTracker.API.Models
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; } = string.Empty;
+        public string Id { get; set; } = null!;
 
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string Deadline { get; set; } = string.Empty;
+    
         public string Priority { get; set; } = "medium";
         public string Status { get; set; } = "todo";
         public string Color { get; set; } = "#FFCDD2";
+        [BsonElement("category")]
+        public string Category { get; set; } = string.Empty;
+
         public string UserId { get; set; } = string.Empty;
-        public string CreatedAt { get; set; } = string.Empty;
+        
+        public DateTime Deadline { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;  
+
     }
 }

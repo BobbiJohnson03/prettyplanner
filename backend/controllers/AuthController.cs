@@ -31,20 +31,24 @@ namespace GoalTracker.API.Controllers
         }
 
         // POST api/auth/register
-        [HttpPost("register")]
-        public async Task<IActionResult> Register(User user)
-        {
-            var existing = await _userService.GetByEmailAsync(user.Email);
-            if (existing != null)
-                return Conflict("Email already in use.");
+     [HttpPost("register")]
+public async Task<IActionResult> Register(RegisterRequest request)  // Change parameter type
+{
+    var existing = await _userService.GetByEmailAsync(request.Email);
+    if (existing != null)
+        return Conflict("Email already in use.");
 
-            // hashing the password before storing it in the database
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
-            await _userService.CreateAsync(user);
-            // await - wait until the user  is fully ssved to the database
+    var user = new User
+    {
+        Username = request.Username,
+        Email = request.Email,
+        PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),  // Hash plain password
+        CreatedAt = DateTime.UtcNow
+    };
 
-            return Ok(new { message = "User registered successfully." });
-        }
+    await _userService.CreateAsync(user);
+    return Ok(new { message = "User registered successfully." });
+}
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)

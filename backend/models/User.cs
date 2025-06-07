@@ -1,9 +1,9 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace GoalTracker.API.Models /*klasa User należy do przestrzeni nazw GoalTracker.API.Models, co pomaga organizować kod w projekcie*/
+namespace GoalTracker.API.Models 
 {
-    public class User // deklaracja klasy User
+    public class User
     {
         [BsonId] // informuje MongoDB, że to pole jest identyfikatorem dokumentu (odpowiednik id w SQL, klucza głównego)
         [BsonRepresentation(BsonType.ObjectId)]
