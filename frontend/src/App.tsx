@@ -4,6 +4,7 @@ import { Routes, Route } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import VerticalLines from "./components/VerticalLines";
+import PrivateRoute from "./components/PrivateRoute"; // <-- IMPORT PrivateRoute
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/700.css";
@@ -11,7 +12,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import LandingPage from "./pages/LandingPage";
 import MyProfile from "./pages/MyProfile";
-import DashboardPage from "./pages/DashboardPage"; // Corrected import
+import DashboardPage from "./pages/DashboardPage";
 import About from "./components/About";
 
 // Define custom theme for Material-UI
@@ -95,20 +96,25 @@ const theme = createTheme({
 
 const App: React.FC = () => {
   return (
-    // LocalizationProvider is now only in index.tsx
     <ThemeProvider theme={theme}>
-      <CssBaseline /> {/* Resets CSS to a baseline */}
-      <VerticalLines /> {/* Background decorative lines */}
+      <CssBaseline />
+      <VerticalLines />
       <Box sx={{ borderBottom: "1px solid #eaeaea" }}>
-        <Navbar /> {/* Navigation bar */}
+        <Navbar />
       </Box>
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/profile" element={<MyProfile />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/about" element={<About />} />
+
+        {/* Protected Routes - Wrap in PrivateRoute */}
+        <Route element={<PrivateRoute />}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/profile" element={<MyProfile />} /> {/* Assuming MyProfile also needs protection */}
+          {/* Add any other routes that should only be accessible when logged in as children here */}
+        </Route>
       </Routes>
     </ThemeProvider>
   );
