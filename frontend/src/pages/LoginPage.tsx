@@ -6,6 +6,7 @@ import {
   Container,
   Paper,
   Link,
+  Box,
 } from "@mui/material";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { useLoginUserMutation } from "../redux/authApi";
@@ -23,45 +24,48 @@ const LoginPage: React.FC = () => {
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setMessage(""); // Clear previous messages
 
     try {
+      // Backend now expects camelCase properties for login
       const response = await loginUser({ email, password }).unwrap();
-      const { token, user } = response;
+      const { token, user } = response; // user object from backend should have 'id'
 
       if (!token) {
         setMessage("Token is missing from the response.");
         return;
       }
 
-      localStorage.setItem("token", token);
+      // localStorage is handled by authSlice.ts, no need to set here explicitly
       dispatch(setUser({ user, token }));
-      navigate("/");
+      navigate("/dashboard"); // Navigate to dashboard after successful login
     } catch (error: unknown) {
       if (typeof error === "object" && error !== null && "data" in error) {
         const err = error as FetchBaseQueryError;
+        // Access message from backend error response (assuming camelCase)
         setMessage(
           (err.data as { message?: string })?.message ||
-            "Nieprawidłowy email lub hasło."
+            "Invalid email or password. Please try again." // More user-friendly message
         );
       } else {
-        setMessage("Wystąpił nieznany błąd.");
+        setMessage("An unknown error occurred during login."); // More user-friendly message
       }
     }
   };
 
   return (
-    <Container maxWidth="sm">
+    <Container maxWidth="sm" sx={{ mt: 8, mb: 8 }}>
       <Paper
         elevation={3}
         sx={{
-          mt: 10,
           p: 4,
           borderRadius: 3,
-          bgcolor: "background.paper",
-          color: "text.primary",
+          bgcolor: "#1c1c1c", // Darker paper background
+          color: "#f5f5f5", // Light text color
+          boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.3)", // Subtle shadow
         }}
       >
-        <Typography variant="h4" sx={{ mb: 3, textAlign: "center" }}>
+        <Typography variant="h4" sx={{ mb: 3, textAlign: "center", fontWeight: 700 }}>
           Logowanie
         </Typography>
         <form onSubmit={handleLogin}>
@@ -72,9 +76,18 @@ const LoginPage: React.FC = () => {
             onChange={(e) => setEmail(e.target.value)}
             fullWidth
             required
-            sx={{ mb: 2 }}
             InputLabelProps={{ style: { color: "#ccc" } }}
             InputProps={{ style: { color: "#f5f5f5" } }}
+            variant="outlined"
+            size="medium"
+            sx={{
+              mb: 2, // Combined from first sx prop
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": { borderColor: "#555" },
+                "&:hover fieldset": { borderColor: "#888" },
+                "&.Mui-focused fieldset": { borderColor: "#90caf9" },
+              },
+            }}
           />
           <TextField
             label="Hasło"
@@ -83,12 +96,21 @@ const LoginPage: React.FC = () => {
             onChange={(e) => setPassword(e.target.value)}
             fullWidth
             required
-            sx={{ mb: 2 }}
             InputLabelProps={{ style: { color: "#ccc" } }}
             InputProps={{ style: { color: "#f5f5f5" } }}
+            variant="outlined"
+            size="medium"
+            sx={{
+              mb: 2, // Combined from first sx prop
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": { borderColor: "#555" },
+                "&:hover fieldset": { borderColor: "#888" },
+                "&.Mui-focused fieldset": { borderColor: "#90caf9" },
+              },
+            }}
           />
           {message && (
-            <Typography color="error" sx={{ mb: 2 }}>
+            <Typography color="error" sx={{ mb: 2, textAlign: "center" }}>
               {message}
             </Typography>
           )}
@@ -99,17 +121,26 @@ const LoginPage: React.FC = () => {
             fullWidth
             size="large"
             disabled={isLoading}
+            sx={{
+              mt: 2,
+              py: 1.5,
+              fontSize: "1.1rem",
+              fontWeight: 600,
+              backgroundColor: "#90caf9", // Light blue for button
+              "&:hover": { backgroundColor: "#64b5f6" },
+            }}
           >
             {isLoading ? "Logowanie..." : "Zaloguj się"}
           </Button>
         </form>
-        <Typography sx={{ mt: 2, textAlign: "center", color: "text.secondary" }}>
+        <Typography sx={{ mt: 3, textAlign: "center", color: "#aaaaaa" }}>
           Nie masz konta?{" "}
           <Link
             component={RouterLink}
             to="/register"
             underline="hover"
             color="primary"
+            sx={{ fontWeight: 600 }}
           >
             Zarejestruj się
           </Link>

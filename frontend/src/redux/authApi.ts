@@ -1,24 +1,35 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { RootState } from "./store"; // Assuming RootState is defined in store.ts
 
-// 👤 User model
+// 👤 User model - Changed _id to id for consistency with backend login response
 export interface User {
-  _id: string;
+  id: string;
   username: string;
   email: string;
+  // If avatarUrl exists on backend, add it here:
+  // avatarUrl?: string;
 }
 
 // 🔐 Auth response from backend
 export interface AuthResponse {
   message: string;
-  user: User;
+  user: User; // User object now has 'id'
   token: string;
 }
 
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: "http://localhost:5229/api", // Adjust if needed
-    // credentials: "include", // <- ONLY if you're using cookies
+    baseUrl: "http://localhost:5229/api", // Adjust for deployment
+    // This prepareHeaders function will automatically attach the JWT to ALL requests
+    // originating from this API slice, assuming a token is present in Redux state.
+    prepareHeaders: (headers, { getState }) => {
+      const token = (getState() as RootState).auth.token;
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+      }
+      return headers;
+    },
   }),
   tagTypes: ["User"], // Optional: for cache management
   endpoints: (builder) => ({
@@ -27,14 +38,10 @@ export const authApi = createApi({
       void,
       { username: string; email: string; password: string }
     >({
-      query: ({ username, email, password }) => ({
+      query: (credentials) => ({ // credentials now directly maps to camelCase backend
         url: "/auth/register",
         method: "POST",
-        body: {
-          username,
-          email,
-          passwordHash: password, // your backend expects 'passwordHash'
-        },
+        body: credentials, // Backend now expects camelCase (username, email, password)
       }),
     }),
 
@@ -43,28 +50,22 @@ export const authApi = createApi({
       AuthResponse,
       { email: string; password: string }
     >({
-      query: (credentials) => ({
+      query: (credentials) => ({ // credentials now directly maps to camelCase backend
         url: "/auth/login",
         method: "POST",
-        body: credentials,
+        body: credentials, // Backend now expects camelCase (email, password)
       }),
     }),
 
-    // 🚪 Logout
-    logoutUser: builder.mutation<{ message: string }, void>({
-      query: () => ({
-        url: "/auth/logout",
-        method: "POST",
-      }),
-    }),
-
-    // 👁️‍🗨️ Get user by ID
+    // 👁️‍🗨️ Get user by ID (will use Authorization header)
     getUser: builder.query<User, string>({
       query: (userId) => `/users/${userId}`,
       providesTags: (result, error, id) => [{ type: "User", id }],
     }),
 
-    // ✏️ Update user
+    // ✏️ Update user (will use Authorization header)
+    // Note: If you add avatar upload, this mutation will need to be updated
+    // to handle FormData, or a new mutation specific for profile update created.
     updateUser: builder.mutation<
       User,
       { userId: string; updatedUser: Partial<User> }
@@ -72,14 +73,14 @@ export const authApi = createApi({
       query: ({ userId, updatedUser }) => ({
         url: `/users/${userId}`,
         method: "PUT",
-        body: updatedUser,
+        body: updatedUser, // Backend now expects camelCase (e.g., username, email, avatarUrl)
       }),
       invalidatesTags: (result, error, { userId }) => [
         { type: "User", id: userId },
       ],
     }),
 
-    // 🗑️ Delete user
+    // 🗑️ Delete user (will use Authorization header)
     deleteUser: builder.mutation<void, string>({
       query: (userId) => ({
         url: `/users/${userId}`,
@@ -94,8 +95,10 @@ export const authApi = createApi({
 export const {
   useRegisterUserMutation,
   useLoginUserMutation,
-  useLogoutUserMutation,
   useGetUserQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,
 } = authApi;
+
+// Removed useLogoutUserMutation as there is no corresponding backend endpoint.
+// Client-side logout is handled by clearing the Redux state and localStorage.
