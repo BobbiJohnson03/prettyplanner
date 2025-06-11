@@ -17,16 +17,20 @@ const MyProfile: React.FC = () => {
           boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.3)", // Subtle shadow
         }}
       >
-        <Typography variant="h4" gutterBottom sx={{ textAlign: "center", fontWeight: 700, mb: 3 }}>
-          Twój profil
+        <Typography
+          variant="h4"
+          gutterBottom
+          sx={{ textAlign: "center", fontWeight: 700, mb: 3 }}
+        >
+          Your Profile
         </Typography>
         {user ? (
           <Box>
             <Typography variant="body1" sx={{ mb: 1 }}>
-              <strong>ID Użytkownika:</strong> {user.id} {/* Display the user ID */}
+              <strong>User ID:</strong> {user.id}
             </Typography>
             <Typography variant="body1" sx={{ mb: 1 }}>
-              <strong>Nazwa użytkownika:</strong> {user.username}
+              <strong>Username:</strong> {user.username}
             </Typography>
             <Typography variant="body1" sx={{ mb: 1 }}>
               <strong>Email:</strong> {user.email}
@@ -44,7 +48,7 @@ const MyProfile: React.FC = () => {
           </Box>
         ) : (
           <Typography color="text.secondary" sx={{ textAlign: "center" }}>
-            Nie jesteś zalogowany(a).
+            You are not logged in.
           </Typography>
         )}
       </Paper>

@@ -37,33 +37,31 @@ const RegisterPage: React.FC = () => {
 
   const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(""); // Clear previous errors
+    setError("");
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords must match!"); // Changed message
+      setError("Passwords must match!");
       return;
     }
 
     try {
-      // Backend now expects camelCase properties for registration
       await registerUser({
         username: formData.username,
         email: formData.email,
         password: formData.password,
       }).unwrap();
 
-      navigate("/login"); // Navigate to login after successful registration
+      navigate("/login");
     } catch (err: unknown) {
       console.error("Registration error:", err);
       if (typeof err === "object" && err !== null && "data" in err) {
         const fetchError = err as FetchBaseQueryError;
-        // Access message from backend error response (assuming camelCase)
         setError(
           (fetchError.data as { message?: string })?.message ||
-            "Registration failed. Please try again." // More user-friendly message
+            "Registration failed. Please try again."
         );
       } else {
-        setError("An unknown error occurred during registration."); // More user-friendly message
+        setError("An unknown error occurred during registration.");
       }
     }
   };
@@ -75,18 +73,21 @@ const RegisterPage: React.FC = () => {
         sx={{
           p: 4,
           borderRadius: 3,
-          bgcolor: "#1c1c1c", // Darker paper background
-          color: "#f5f5f5", // Light text color
-          boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.3)", // Subtle shadow
+          bgcolor: "#1c1c1c",
+          color: "#f5f5f5",
+          boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.3)",
         }}
       >
-        <Typography variant="h4" sx={{ mb: 3, textAlign: "center", fontWeight: 700 }}>
-          Rejestracja
+        <Typography
+          variant="h4"
+          sx={{ mb: 3, textAlign: "center", fontWeight: 700 }}
+        >
+          Register
         </Typography>
         <form onSubmit={handleRegister}>
           <TextField
             name="username"
-            label="Nazwa użytkownika"
+            label="Username"
             fullWidth
             value={formData.username}
             onChange={handleChange}
@@ -96,7 +97,7 @@ const RegisterPage: React.FC = () => {
             variant="outlined"
             size="medium"
             sx={{
-              mb: 2, // Combined from first sx prop
+              mb: 2,
               "& .MuiOutlinedInput-root": {
                 "& fieldset": { borderColor: "#555" },
                 "&:hover fieldset": { borderColor: "#888" },
@@ -117,7 +118,7 @@ const RegisterPage: React.FC = () => {
             variant="outlined"
             size="medium"
             sx={{
-              mb: 2, // Combined from first sx prop
+              mb: 2,
               "& .MuiOutlinedInput-root": {
                 "& fieldset": { borderColor: "#555" },
                 "&:hover fieldset": { borderColor: "#888" },
@@ -127,7 +128,7 @@ const RegisterPage: React.FC = () => {
           />
           <TextField
             name="password"
-            label="Hasło"
+            label="Password"
             type="password"
             fullWidth
             value={formData.password}
@@ -138,7 +139,7 @@ const RegisterPage: React.FC = () => {
             variant="outlined"
             size="medium"
             sx={{
-              mb: 2, // Combined from first sx prop
+              mb: 2,
               "& .MuiOutlinedInput-root": {
                 "& fieldset": { borderColor: "#555" },
                 "&:hover fieldset": { borderColor: "#888" },
@@ -148,7 +149,7 @@ const RegisterPage: React.FC = () => {
           />
           <TextField
             name="confirmPassword"
-            label="Powtórz hasło"
+            label="Confirm Password"
             type="password"
             fullWidth
             value={formData.confirmPassword}
@@ -159,7 +160,7 @@ const RegisterPage: React.FC = () => {
             variant="outlined"
             size="medium"
             sx={{
-              mb: 2, // Combined from first sx prop
+              mb: 2,
               "& .MuiOutlinedInput-root": {
                 "& fieldset": { borderColor: "#555" },
                 "&:hover fieldset": { borderColor: "#888" },
@@ -184,15 +185,15 @@ const RegisterPage: React.FC = () => {
               py: 1.5,
               fontSize: "1.1rem",
               fontWeight: 600,
-              backgroundColor: "#90caf9", // Light blue for button
+              backgroundColor: "#90caf9",
               "&:hover": { backgroundColor: "#64b5f6" },
             }}
           >
-            {isLoading ? "Rejestrowanie..." : "Zarejestruj się"}
+            {isLoading ? "Registering..." : "Register"}
           </Button>
         </form>
         <Typography sx={{ mt: 3, textAlign: "center", color: "#aaaaaa" }}>
-          Masz już konto?{" "}
+          Already have an account?{" "}
           <Link
             component={RouterLink}
             to="/login"
@@ -200,7 +201,7 @@ const RegisterPage: React.FC = () => {
             color="primary"
             sx={{ fontWeight: 600 }}
           >
-            Zaloguj się
+            Log in
           </Link>
         </Typography>
       </Paper>

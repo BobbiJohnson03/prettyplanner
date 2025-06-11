@@ -24,31 +24,28 @@ const LoginPage: React.FC = () => {
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setMessage(""); // Clear previous messages
+    setMessage("");
 
     try {
-      // Backend now expects camelCase properties for login
       const response = await loginUser({ email, password }).unwrap();
-      const { token, user } = response; // user object from backend should have 'id'
+      const { token, user } = response;
 
       if (!token) {
         setMessage("Token is missing from the response.");
         return;
       }
 
-      // localStorage is handled by authSlice.ts, no need to set here explicitly
       dispatch(setUser({ user, token }));
-      navigate("/dashboard"); // Navigate to dashboard after successful login
+      navigate("/");
     } catch (error: unknown) {
       if (typeof error === "object" && error !== null && "data" in error) {
         const err = error as FetchBaseQueryError;
-        // Access message from backend error response (assuming camelCase)
         setMessage(
           (err.data as { message?: string })?.message ||
-            "Invalid email or password. Please try again." // More user-friendly message
+            "Invalid email or password. Please try again."
         );
       } else {
-        setMessage("An unknown error occurred during login."); // More user-friendly message
+        setMessage("An unknown error occurred during login.");
       }
     }
   };
@@ -60,13 +57,16 @@ const LoginPage: React.FC = () => {
         sx={{
           p: 4,
           borderRadius: 3,
-          bgcolor: "#1c1c1c", // Darker paper background
-          color: "#f5f5f5", // Light text color
-          boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.3)", // Subtle shadow
+          bgcolor: "#1c1c1c",
+          color: "#f5f5f5",
+          boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.3)",
         }}
       >
-        <Typography variant="h4" sx={{ mb: 3, textAlign: "center", fontWeight: 700 }}>
-          Logowanie
+        <Typography
+          variant="h4"
+          sx={{ mb: 3, textAlign: "center", fontWeight: 700 }}
+        >
+          Login
         </Typography>
         <form onSubmit={handleLogin}>
           <TextField
@@ -81,7 +81,7 @@ const LoginPage: React.FC = () => {
             variant="outlined"
             size="medium"
             sx={{
-              mb: 2, // Combined from first sx prop
+              mb: 2,
               "& .MuiOutlinedInput-root": {
                 "& fieldset": { borderColor: "#555" },
                 "&:hover fieldset": { borderColor: "#888" },
@@ -90,7 +90,7 @@ const LoginPage: React.FC = () => {
             }}
           />
           <TextField
-            label="Hasło"
+            label="Password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -101,7 +101,7 @@ const LoginPage: React.FC = () => {
             variant="outlined"
             size="medium"
             sx={{
-              mb: 2, // Combined from first sx prop
+              mb: 2,
               "& .MuiOutlinedInput-root": {
                 "& fieldset": { borderColor: "#555" },
                 "&:hover fieldset": { borderColor: "#888" },
@@ -126,15 +126,15 @@ const LoginPage: React.FC = () => {
               py: 1.5,
               fontSize: "1.1rem",
               fontWeight: 600,
-              backgroundColor: "#90caf9", // Light blue for button
+              backgroundColor: "#90caf9",
               "&:hover": { backgroundColor: "#64b5f6" },
             }}
           >
-            {isLoading ? "Logowanie..." : "Zaloguj się"}
+            {isLoading ? "Logging in..." : "Log in"}
           </Button>
         </form>
         <Typography sx={{ mt: 3, textAlign: "center", color: "#aaaaaa" }}>
-          Nie masz konta?{" "}
+          Don’t have an account?{" "}
           <Link
             component={RouterLink}
             to="/register"
@@ -142,7 +142,7 @@ const LoginPage: React.FC = () => {
             color="primary"
             sx={{ fontWeight: 600 }}
           >
-            Zarejestruj się
+            Register
           </Link>
         </Typography>
       </Paper>

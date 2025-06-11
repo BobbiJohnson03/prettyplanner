@@ -1,13 +1,12 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using GoalTracker.API.Models;
 using GoalTracker.API.Services;
 using GoalTracker.API.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc; // Required for ValidationProblemDetails, BadRequestObjectResult, StatusCodes
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using FluentValidation;
-using FluentValidation.AspNetCore;
-using Microsoft.Extensions.Options;
-using System.ComponentModel.DataAnnotations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +25,7 @@ builder.Services.AddSingleton<KanbanTaskService>();
 builder.Services.AddSingleton<NotificationService>();
 builder.Services.AddSingleton<SummaryService>();
 
-// Configure controllers with FluentValidation
+// Configure controllers with FluentValidation and API behavior options
 builder.Services.AddControllers()
     .AddFluentValidation(fv =>
     {
@@ -35,9 +34,31 @@ builder.Services.AddControllers()
     })
     .AddJsonOptions(options =>
     {
-        //options.JsonSerializerOptions.PropertyNamingPolicy = null;
-         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    })
+    // --- START: Added configuration for detailed API validation responses ---
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        // This delegate is invoked when model state is invalid.
+        // We're overriding the default behavior to return a more consistent and parsable
+        // ValidationProblemDetails object, which includes detailed validation errors.
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var problemDetails = new ValidationProblemDetails(context.ModelState)
+            {
+                // Set the status code to 400 Bad Request
+                Status = StatusCodes.Status400BadRequest,
+                // Provide a standard RFC 7807 type URI for validation errors
+                Type = "https://tools.ietf.org/html/rfc7807#section-3.1",
+                // A general detail message
+                Detail = "One or more validation errors occurred."
+            };
+
+            // Return a BadRequestObjectResult with the problem details
+            return new BadRequestObjectResult(problemDetails);
+        };
     });
+    // --- END: Added configuration ---
 
 // Configure Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();

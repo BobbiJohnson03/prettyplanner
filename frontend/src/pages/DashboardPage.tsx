@@ -9,7 +9,7 @@ import {
   TextField,
   MenuItem,
   IconButton,
-  Alert, // Keeping Alert for consistency, though custom modals are preferred for user-facing messages
+  Alert,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
@@ -67,15 +67,17 @@ const predefinedColors = [
   "#E6E6E3", // Default light grey from backend
 ];
 
-const TITLE_CHAR_LIMIT = 20;
-const DESCRIPTION_CHAR_LIMIT = 40;
+const TITLE_CHAR_LIMIT = 50;
+const DESCRIPTION_CHAR_LIMIT = 100;
 const CATEGORY_NAME_CHAR_LIMIT = 20;
 
 type KanbanColumnStatus = "todo" | "inProgress" | "done";
 
 // Helper function to check if a string is a valid KanbanColumnStatus
-const isValidKanbanColumn = (id: string | KanbanColumnStatus): id is KanbanColumnStatus => {
-  return ['todo', 'inProgress', 'done'].includes(id as KanbanColumnStatus);
+const isValidKanbanColumn = (
+  id: string | KanbanColumnStatus
+): id is KanbanColumnStatus => {
+  return ["todo", "inProgress", "done"].includes(id as KanbanColumnStatus);
 };
 
 // Interface for column mapping for dnd-kit
@@ -90,7 +92,11 @@ interface DroppableColumnProps {
   title: string;
 }
 
-const DroppableColumn: React.FC<DroppableColumnProps> = ({ id, children, title }) => {
+const DroppableColumn: React.FC<DroppableColumnProps> = ({
+  id,
+  children,
+  title,
+}) => {
   return (
     <Droppable droppableId={id}>
       {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => (
@@ -103,15 +109,20 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({ id, children, title }
             borderRadius: 2,
             p: 2,
             flexShrink: 0,
-            transition: 'background-color 0.2s ease',
+            transition: "background-color 0.2s ease",
           }}
           {...provided.droppableProps}
         >
-          <Typography variant="h6" align="center" sx={{ color: "#f5f5f5", textTransform: 'capitalize' }}>
+          <Typography
+            variant="h6"
+            align="center"
+            sx={{ color: "#f5f5f5", textTransform: "capitalize" }}
+          >
             {title}
           </Typography>
           {children}
-          {provided.placeholder} {/* Important for drag-and-drop to work visually */}
+          {provided.placeholder}{" "}
+          {/* Important for drag-and-drop to work visually */}
         </Box>
       )}
     </Droppable>
@@ -123,10 +134,15 @@ interface DraggableTaskProps {
   task: KanbanTask;
   index: number;
   handleDeleteTask: (id: string) => void;
-  // TODO: Add prop for opening edit modal
+  handleEditTask: (task: KanbanTask) => void; // Added prop for editing
 }
 
-const DraggableTask: React.FC<DraggableTaskProps> = ({ task, index, handleDeleteTask }) => {
+const DraggableTask: React.FC<DraggableTaskProps> = ({
+  task,
+  index,
+  handleDeleteTask,
+  handleEditTask, // Destructure the new prop
+}) => {
   return (
     <Draggable draggableId={task.id} index={index}>
       {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
@@ -143,23 +159,28 @@ const DraggableTask: React.FC<DraggableTaskProps> = ({ task, index, handleDelete
             fontWeight: 500,
             cursor: "grab",
             boxShadow: snapshot.isDragging
-              ? '0 5px 15px rgba(0,0,0,0.4)'
-              : '0 2px 4px rgba(0,0,0,0.2)',
-            transform: snapshot.isDragging ? 'rotate(2deg)' : 'none', // Slight rotation when dragging
+              ? "0 5px 15px rgba(0,0,0,0.4)"
+              : "0 2px 4px rgba(0,0,0,0.2)",
+            transform: snapshot.isDragging ? "rotate(2deg)" : "none", // Slight rotation when dragging
             opacity: snapshot.isDragging ? 0.8 : 1, // Make dragged item translucent
-            transition: 'box-shadow 0.1s ease, transform 0.1s ease, opacity 0.1s ease',
+            transition:
+              "box-shadow 0.1s ease, transform 0.1s ease, opacity 0.1s ease",
           }}
         >
-          <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
             <Typography
               variant="body1"
               sx={{
                 flexGrow: 1,
-                overflowWrap: 'break-word',
-                wordBreak: 'break-word',
-                whiteSpace: 'normal',
+                overflowWrap: "break-word",
+                wordBreak: "break-word",
+                whiteSpace: "normal",
                 marginRight: 1,
-                fontWeight: 'bold'
+                fontWeight: "bold",
               }}
             >
               {task.title}
@@ -167,9 +188,7 @@ const DraggableTask: React.FC<DraggableTaskProps> = ({ task, index, handleDelete
             <Box sx={{ flexShrink: 0 }}>
               <IconButton
                 size="small"
-                onClick={() => {
-                  console.log("TODO: Open edit modal for", task.id);
-                }}
+                onClick={() => handleEditTask(task)} // Call handleEditTask with the task
               >
                 <EditIcon sx={{ color: "#fff" }} />
               </IconButton>
@@ -185,11 +204,11 @@ const DraggableTask: React.FC<DraggableTaskProps> = ({ task, index, handleDelete
             variant="body2"
             sx={{
               mt: 1,
-              overflowWrap: 'break-word',
-              wordBreak: 'break-word',
-              whiteSpace: 'normal',
-              fontSize: '0.85rem',
-              color: '#ddd'
+              overflowWrap: "break-word",
+              wordBreak: "break-word",
+              whiteSpace: "normal",
+              fontSize: "0.85rem",
+              color: "#ddd",
             }}
           >
             {task.description}
@@ -199,9 +218,8 @@ const DraggableTask: React.FC<DraggableTaskProps> = ({ task, index, handleDelete
               ? `Due: ${dayjs(task.deadline).format("YYYY-MM-DD")}`
               : "No deadline"}
           </Typography>
-          <Typography variant="caption" sx={{ display: 'block', mt: 0.5 }}>
-            Priority: {task.priority}{" "}
-            {task.category && `(${task.category})`}
+          <Typography variant="caption" sx={{ display: "block", mt: 0.5 }}>
+            Priority: {task.priority} {task.category && `(${task.category})`}
           </Typography>
         </Box>
       )}
@@ -213,12 +231,17 @@ const DashboardPage: React.FC = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const userId = user?.id;
 
-  const { data: tasks = [], refetch, isFetching } = useGetTasksByUserQuery(userId!, {
+  const {
+    data: tasks = [],
+    refetch,
+    isFetching,
+  } = useGetTasksByUserQuery(userId!, {
     skip: !userId,
   });
-  const { data: categories = [], refetch: refetchCategories } = useGetCategoriesByUserQuery(userId!, {
-    skip: !userId,
-  });
+  const { data: categories = [], refetch: refetchCategories } =
+    useGetCategoriesByUserQuery(userId!, {
+      skip: !userId,
+    });
 
   const [addTask] = useAddTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
@@ -227,12 +250,19 @@ const DashboardPage: React.FC = () => {
   const [updateCategory] = useUpdateCategoryMutation();
   const [deleteCategory] = useDeleteCategoryMutation();
 
-  const [columns, setColumns] = useState<ColumnMap>({ todo: [], inProgress: [], done: [] });
+  const [columns, setColumns] = useState<ColumnMap>({
+    todo: [],
+    inProgress: [],
+    done: [],
+  });
   const [openAddTaskDialog, setOpenAddTaskDialog] = useState(false);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [categoryName, setCategoryName] = useState("");
   const [categoryColor, setCategoryColor] = useState("#E6E6E3");
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
+    null
+  );
+  const [editingTask, setEditingTask] = useState<KanbanTask | null>(null); // New state for task being edited
 
   const [newTask, setNewTask] = useState({
     title: "",
@@ -244,35 +274,74 @@ const DashboardPage: React.FC = () => {
     category: "",
   });
 
+  // Function to reset the new task form state (used for both add and edit after save/close)
+  const resetNewTaskForm = () => {
+    setNewTask({
+      title: "",
+      description: "",
+      deadline: null,
+      priority: "medium",
+      status: "todo",
+      color: "#FFCDD2",
+      category: "",
+    });
+    setEditingTask(null); // Clear editing task state
+  };
+
   // Effect to synchronize tasks from RTK Query with local columns state
   // This useEffect ensures the local 'columns' state reflects the 'tasks' data from RTK Query.
   // It's crucial for initial load and after refetches.
   useEffect(() => {
-    if (!isFetching) { 
+    // LOG: Triggered when tasks or isFetching changes
+    console.log("useEffect triggered. Current tasks from RTK Query:", tasks);
+    if (!isFetching) {
       const mapped: ColumnMap = { todo: [], inProgress: [], done: [] };
       tasks.forEach((task) => {
         if (isValidKanbanColumn(task.status)) {
           mapped[task.status].push(task);
         } else {
-          console.warn(`Task with invalid status found: ${task.status} for task ID: ${task.id}. Defaulting to 'todo'.`);
+          console.warn(
+            `Task with invalid status found: ${task.status} for task ID: ${task.id}. Defaulting to 'todo'.`
+          );
           mapped.todo.push(task);
         }
       });
       // Sort tasks within each column by orderIndex
       Object.keys(mapped).forEach((k) => {
-        mapped[k].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+        mapped[k as KanbanColumnStatus].sort(
+          (a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)
+        );
       });
-      
+
       // Deep compare to prevent unnecessary re-renders when data is the same
       if (JSON.stringify(mapped) !== JSON.stringify(columns)) {
+        // LOG: Setting columns state with new mapped data
+        console.log("useEffect: Setting columns state with new mapped data.");
         setColumns(mapped);
       }
     }
   }, [tasks, isFetching]); // Depend on tasks and isFetching to trigger updates
 
-  const handleAddTask = async () => {
+  // Handle opening task dialog for editing
+  const handleEditTask = (taskToEdit: KanbanTask) => {
+    setEditingTask(taskToEdit); // Store the task being edited
+    setNewTask({
+      // Populate the form fields with data from the task being edited
+      title: taskToEdit.title,
+      description: taskToEdit.description,
+      // Convert ISO string deadline to Dayjs object if it exists
+      deadline: taskToEdit.deadline ? dayjs(taskToEdit.deadline) : null,
+      priority: taskToEdit.priority,
+      status: taskToEdit.status as KanbanColumnStatus, // Ensure type consistency
+      color: taskToEdit.color,
+      category: taskToEdit.category,
+    });
+    setOpenAddTaskDialog(true); // Open the dialog
+  };
+
+  const handleSaveTask = async () => {
     if (!userId) {
-      alert("Please log in to add tasks.");
+      alert("Please log in to save tasks.");
       return;
     }
     if (!newTask.title.trim()) {
@@ -285,78 +354,176 @@ const DashboardPage: React.FC = () => {
     }
 
     const trimmedTitle = newTask.title.slice(0, TITLE_CHAR_LIMIT);
-    const trimmedDescription = newTask.description.slice(0, DESCRIPTION_CHAR_LIMIT);
-    const finalDeadline = newTask.deadline ? newTask.deadline.toISOString() : new Date().toISOString();
+    const trimmedDescription = newTask.description.slice(
+      0,
+      DESCRIPTION_CHAR_LIMIT
+    );
+    const finalDeadline = newTask.deadline
+      ? newTask.deadline.toISOString()
+      : new Date().toISOString(); // Fallback to current date if no deadline
+
+    // Common payload structure for both add and update
+    const commonPayload = {
+      title: trimmedTitle,
+      description: trimmedDescription,
+      deadline: finalDeadline,
+      priority: newTask.priority,
+      status: newTask.status,
+      color: newTask.color,
+      category: newTask.category,
+      userId: userId, // UserId should always be associated
+    };
 
     try {
-      // Calculate orderIndex for the new task based on the current column's tasks
-      // This is an optimistic calculation based on the current UI state.
-      const newOrderIndex = columns[newTask.status].length > 0 
-        ? Math.max(...columns[newTask.status].map(t => t.orderIndex || 0)) + 1 
-        : 0;
+      if (editingTask) {
+        // If editing an existing task
+        const updatedTaskPayload: Partial<KanbanTask> = {
+          ...commonPayload,
+          // For updates, we primarily send what's changed.
+          // Keep createdAt from existing task.
+          createdAt: editingTask.createdAt,
+          // OrderIndex might not be explicitly sent on form edit,
+          // it's primarily managed by drag-and-drop.
+          // If it needs to be updated here, pull it from existingTask or re-evaluate.
+          orderIndex: editingTask.orderIndex,
+        };
 
-      const payload = {
-        title: trimmedTitle,
-        description: trimmedDescription,
-        deadline: finalDeadline,
-        priority: newTask.priority,
-        status: newTask.status,
-        color: newTask.color,
-        category: newTask.category,
-        userId: userId,
-        createdAt: new Date().toISOString(),
-        orderIndex: newOrderIndex, // Use the calculated orderIndex
-      };
+        await updateTask({
+          id: editingTask.id!,
+          updated: updatedTaskPayload,
+        }).unwrap();
 
-      // Execute the addTask mutation and get the returned task with its actual ID
-      const addedTask = await addTask(payload).unwrap();
+        // Optimistically update the local state for the edited task
+        setColumns((prevColumns) => {
+          const newCols = { ...prevColumns };
+          const oldStatus = editingTask.status;
+          const newStatus = newTask.status;
 
-      // IMPORTANT: Optimistically update the local 'columns' state with the task returned from the backend (which now has the correct ID)
-      setColumns(prevColumns => {
-        const newColumns = { ...prevColumns };
-        // Ensure the column exists before pushing
-        if (!newColumns[addedTask.status]) {
-          newColumns[addedTask.status] = [];
-        }
-        newColumns[addedTask.status] = [...newColumns[addedTask.status], addedTask];
-        // Sort the column to maintain order, especially useful for new tasks
-        newColumns[addedTask.status].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
-        return newColumns;
-      });
+          // If status changed, remove from old column and add to new
+          if (oldStatus !== newStatus) {
+            newCols[oldStatus] = newCols[oldStatus].filter(
+              (t) => t.id !== editingTask.id
+            );
+            if (!newCols[newStatus]) newCols[newStatus] = [];
+            newCols[newStatus].push({
+              ...editingTask,
+              ...newTask,
+              id: editingTask.id!,
+              deadline: finalDeadline,
+            });
+          } else {
+            // If status is same, just update the task in its current column
+            newCols[newStatus] = newCols[newStatus].map((t) =>
+              t.id === editingTask.id
+                ? {
+                    ...t,
+                    ...newTask,
+                    id: editingTask.id!,
+                    deadline: finalDeadline,
+                  }
+                : t
+            );
+          }
 
-      // After optimistically updating, then refetch to ensure the RTK Query cache is fully consistent.
-      // The useEffect will pick up on this, but our immediate setColumns should prevent flicker.
-      await refetch(); 
-      setOpenAddTaskDialog(false);
-      setNewTask({
-        title: "", description: "", deadline: null, priority: "medium",
-        status: "todo", color: "#FFCDD2", category: "",
-      });
+          // Re-sort affected columns to ensure orderIndex consistency
+          Object.keys(newCols).forEach((k) => {
+            newCols[k as KanbanColumnStatus].sort(
+              (a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)
+            );
+          });
+          return newCols;
+        });
+      } else {
+        // If adding a new task
+        const newOrderIndex =
+          columns[newTask.status].length > 0
+            ? Math.max(
+                ...columns[newTask.status].map((t) => t.orderIndex || 0)
+              ) + 1
+            : 0;
+
+        const payload = {
+          ...commonPayload,
+          createdAt: new Date().toISOString(),
+          orderIndex: newOrderIndex,
+        };
+        const addedTask = await addTask(payload).unwrap();
+
+        // Optimistically update the local 'columns' state for the new task
+        setColumns((prevColumns) => {
+          const newColumns = { ...prevColumns };
+          if (!newColumns[addedTask.status]) {
+            newColumns[addedTask.status] = [];
+          }
+          newColumns[addedTask.status] = [
+            ...newColumns[addedTask.status],
+            addedTask,
+          ];
+          newColumns[addedTask.status].sort(
+            (a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)
+          );
+          return newColumns;
+        });
+      }
+
+      await refetch(); // Final refetch to ensure UI is fully synchronized with backend
+      setOpenAddTaskDialog(false); // Close dialog
+      resetNewTaskForm(); // Reset form fields
     } catch (err) {
-      console.error("Error adding task:", err);
-      // Detailed error handling for user feedback
+      console.error("Error saving task:", err);
+      // Detailed error handling for user feedback (similar to existing logic)
       if (typeof err === "object" && err !== null) {
         const fetchError = err as FetchBaseQueryError;
         if (fetchError.data) {
           try {
-            const errorData = typeof fetchError.data === 'string' ? JSON.parse(fetchError.data) : fetchError.data;
-            if (errorData && typeof errorData === 'object' && 'errors' in errorData) {
-                const validationErrors = Object.values(errorData.errors).flat().join(". ");
-                alert(`Validation Error: ${validationErrors || 'One or more fields are invalid. Check console for details.'}`);
-            } else if (errorData && typeof errorData === 'object' && 'message' in errorData) {
-                alert(`Error from server: ${errorData.message}`);
+            const errorData =
+              typeof fetchError.data === "string"
+                ? JSON.parse(fetchError.data)
+                : fetchError.data;
+            if (
+              errorData &&
+              typeof errorData === "object" &&
+              "errors" in errorData
+            ) {
+              const validationErrors = Object.values(errorData.errors)
+                .flat()
+                .join(". ");
+              alert(
+                `Validation Error: ${
+                  validationErrors ||
+                  "One or more fields are invalid. Check console for details."
+                }`
+              );
+            } else if (
+              errorData &&
+              typeof errorData === "object" &&
+              "message" in errorData
+            ) {
+              alert(`Error from server: ${errorData.message}`);
             } else {
-                alert("An unexpected error occurred. Please check console for raw backend error data.");
+              alert(
+                "An unexpected error occurred. Please check console for raw backend error data."
+              );
             }
           } catch (parseError) {
-            console.error("Failed to parse backend error data as JSON:", fetchError.data, parseError);
-            alert("An unknown error occurred. Please check console for details.");
+            console.error(
+              "Failed to parse backend error data as JSON:",
+              fetchError.data,
+              parseError
+            );
+            alert(
+              "An unknown error occurred. Please check console for details."
+            );
           }
         } else {
-          alert("An unexpected error occurred. No details from server. Check network tab.");
+          alert(
+            "An unexpected error occurred. No details from server. Check network tab."
+          );
         }
       } else {
-        alert("An unknown error occurred while adding task. Please check console for details.");
+        alert(
+          "An unknown error occurred while saving task. Please check console for details."
+        );
       }
     }
   };
@@ -380,9 +547,16 @@ const DashboardPage: React.FC = () => {
       console.error("Failed to delete category:", error);
       if (typeof error === "object" && error !== null && "data" in error) {
         console.error("Backend error details (raw):", error);
-        console.error("Backend error data (JSON):", JSON.stringify((error as any).data, null, 2));
+        console.error(
+          "Backend error data (JSON):",
+          JSON.stringify((error as any).data, null, 2)
+        );
       }
-      alert(`Error deleting category: ${(error as any).data?.message || 'Check console for details.'}`);
+      alert(
+        `Error deleting category: ${
+          (error as any).data?.message || "Check console for details."
+        }`
+      );
     }
   };
 
@@ -401,11 +575,13 @@ const DashboardPage: React.FC = () => {
       alert("Invalid HEX color format. Please use #RRGGBB or #RGB.");
       return;
     }
-    const trimmedCategoryName = categoryName.slice(0, CATEGORY_NAME_CHAR_LIMIT); 
-    
+    const trimmedCategoryName = categoryName.slice(0, CATEGORY_NAME_CHAR_LIMIT);
+
     try {
       if (editingCategoryId) {
-        const existingCategory = categories.find((c) => c.id === editingCategoryId);
+        const existingCategory = categories.find(
+          (c) => c.id === editingCategoryId
+        );
         if (existingCategory) {
           await updateCategory({
             id: editingCategoryId,
@@ -416,7 +592,9 @@ const DashboardPage: React.FC = () => {
             },
           }).unwrap();
         } else {
-          console.error("Attempted to edit a category that does not exist locally.");
+          console.error(
+            "Attempted to edit a category that does not exist locally."
+          );
           alert("Could not find category to update.");
           return;
         }
@@ -436,9 +614,16 @@ const DashboardPage: React.FC = () => {
       console.error("Failed to save category:", error);
       if (typeof error === "object" && error !== null && "data" in error) {
         console.error("Backend error details (raw):", error);
-        console.error("Backend error data (JSON):", JSON.stringify((error as any).data, null, 2));
+        console.error(
+          "Backend error data (JSON):",
+          JSON.stringify((error as any).data, null, 2)
+        );
       }
-      alert(`Error saving category: ${(error as any).data?.message || 'Check console for details.'}`);
+      alert(
+        `Error saving category: ${
+          (error as any).data?.message || "Check console for details."
+        }`
+      );
     }
   };
 
@@ -448,7 +633,9 @@ const DashboardPage: React.FC = () => {
 
     // 1. Dropped outside a droppable area
     if (!destination) {
-      console.log("Dropped outside valid droppable area. Reverting UI to last fetched state.");
+      console.log(
+        "Dropped outside valid droppable area. Reverting UI to last fetched state."
+      );
       await refetch(); // Revert UI to match backend (discard optimistic update)
       return;
     }
@@ -458,15 +645,19 @@ const DashboardPage: React.FC = () => {
     const destColId = destination.droppableId as KanbanColumnStatus;
 
     if (!isValidKanbanColumn(sourceColId) || !isValidKanbanColumn(destColId)) {
-        console.error("Invalid source or destination column ID during drag end. Reverting UI.");
-        await refetch(); // Revert UI
-        return;
+      console.error(
+        "Invalid source or destination column ID during drag end. Reverting UI."
+      );
+      await refetch(); // Revert UI
+      return;
     }
 
     // Find the task being dragged from the current local state
     const draggedTask = columns[sourceColId].find((t) => t.id === draggableId);
     if (!draggedTask) {
-      console.error("Dragged task not found in source column during handleDragEnd. Reverting UI.");
+      console.error(
+        "Dragged task not found in source column during handleDragEnd. Reverting UI."
+      );
       await refetch(); // Revert UI
       return;
     }
@@ -478,7 +669,8 @@ const DashboardPage: React.FC = () => {
     const destTasks = newColumns[destColId];
 
     // Prepare updates for backend based on the new order/status
-    const updatesForBackend: { id: string; updated: Partial<KanbanTask> }[] = [];
+    const updatesForBackend: { id: string; updated: Partial<KanbanTask> }[] =
+      [];
 
     // Case 1: Moving within the same column
     if (sourceColId === destColId) {
@@ -487,6 +679,13 @@ const DashboardPage: React.FC = () => {
       reorderedTasks.splice(destination.index, 0, movedItem);
 
       // Optimistic UI update
+      // LOG: Before optimistic update
+      console.log(
+        "Optimistic UI Update: New columns state (same column move):",
+        JSON.parse(
+          JSON.stringify({ ...newColumns, [sourceColId]: reorderedTasks })
+        )
+      );
       setColumns((prev) => ({
         ...prev,
         [sourceColId]: reorderedTasks, // Update the specific column with the new order
@@ -496,29 +695,39 @@ const DashboardPage: React.FC = () => {
       reorderedTasks.forEach((task, index) => {
         updatesForBackend.push({ id: task.id, updated: { orderIndex: index } });
       });
-
     }
     // Case 2: Moving to a different column
     else {
       // Remove from source column
       const [movedItem] = sourceTasks.splice(source.index, 1);
       // Update the status of the moved item in the local state copy
-      movedItem.status = destColId; 
+      movedItem.status = destColId;
       // Insert into destination column
       destTasks.splice(destination.index, 0, movedItem);
 
       // Optimistic UI update
+      // LOG: Before optimistic update
+      console.log(
+        "Optimistic UI Update: New columns state (cross-column move):",
+        JSON.parse(
+          JSON.stringify({
+            ...newColumns,
+            [sourceColId]: sourceTasks,
+            [destColId]: destTasks,
+          })
+        )
+      );
       setColumns((prev) => ({
         ...prev,
         [sourceColId]: sourceTasks, // Source column is now missing the dragged item
-        [destColId]: destTasks,     // Destination column has the dragged item
+        [destColId]: destTasks, // Destination column has the dragged item
       }));
 
       // Queue updates for backend
       // 1. Update the moved task's status and its new order index in the destination column
-      updatesForBackend.push({ 
-        id: movedItem.id, 
-        updated: { status: destColId, orderIndex: destination.index } 
+      updatesForBackend.push({
+        id: movedItem.id,
+        updated: { status: destColId, orderIndex: destination.index },
       });
 
       // 2. Re-index all tasks in the source column
@@ -530,8 +739,12 @@ const DashboardPage: React.FC = () => {
       destTasks.forEach((task, index) => {
         // We ensure `movedItem`'s orderIndex is set by its direct update above.
         // Other items in the dest column might also need orderIndex updates if they shifted.
-        if (task.id !== draggedTask.id) { // Only update if it's not the task that was just moved
-          updatesForBackend.push({ id: task.id, updated: { orderIndex: index } });
+        if (task.id !== draggedTask.id) {
+          // Only update if it's not the task that was just moved
+          updatesForBackend.push({
+            id: task.id,
+            updated: { orderIndex: index },
+          });
         }
       });
     }
@@ -541,12 +754,12 @@ const DashboardPage: React.FC = () => {
       for (const update of updatesForBackend) {
         // Ensure id is not null before attempting update
         if (update.id) {
-            await updateTask(update).unwrap();
+          await updateTask(update).unwrap();
         }
       }
       // After all backend updates are sent, refetch to ensure ultimate consistency
       // This refetch should ideally just confirm the optimistic state, not fight it.
-      await refetch(); 
+      await refetch();
       console.log("Drag and drop successful, UI synchronized with backend.");
     } catch (error) {
       console.error("Failed to complete drag and drop operation:", error);
@@ -560,7 +773,10 @@ const DashboardPage: React.FC = () => {
       <Box display="flex" justifyContent="center" mb={4}>
         <Button
           variant="outlined"
-          onClick={() => setOpenAddTaskDialog(true)}
+          onClick={() => {
+            setOpenAddTaskDialog(true);
+            resetNewTaskForm(); // Ensure form is reset for new task creation
+          }}
           sx={{
             color: "#f5f5f5",
             borderColor: "#f5f5f5",
@@ -581,32 +797,66 @@ const DashboardPage: React.FC = () => {
         </Button>
       </Box>
 
+      {/* --- MODIFICATION: Added text "use by drag and drop" --- */}
+      <Typography variant="body2" align="center" sx={{ color: "#aaa", mb: 4 }}>
+        use by drag and drop
+      </Typography>
+      {/* --- END MODIFICATION --- */}
+
       {/* DragDropContext for @hello-pangea/dnd */}
       <DragDropContext onDragEnd={handleDragEnd}>
         <Box display="flex" justifyContent="center" gap={3} flexWrap="wrap">
           {Object.entries(columns).map(([status, tasksInColumn]) => (
-            <DroppableColumn id={status as KanbanColumnStatus} title={status.replace(/([A-Z])/g, ' $1').trim()} key={status}>
+            <DroppableColumn
+              id={status as KanbanColumnStatus}
+              title={status.replace(/([A-Z])/g, " $1").trim()}
+              key={status}
+            >
               {tasksInColumn.map((task, index) => (
-                <DraggableTask key={task.id} task={task} index={index} handleDeleteTask={handleDeleteTask} />
+                <DraggableTask
+                  key={task.id}
+                  task={task}
+                  index={index}
+                  handleDeleteTask={handleDeleteTask}
+                  handleEditTask={handleEditTask} // Pass the new handler
+                />
               ))}
             </DroppableColumn>
           ))}
         </Box>
       </DragDropContext>
 
-      {/* Add Task Dialog */}
+      {/* Add/Edit Task Dialog */}
       <Dialog
         open={openAddTaskDialog}
-        onClose={() => setOpenAddTaskDialog(false)}
+        onClose={() => {
+          setOpenAddTaskDialog(false);
+          resetNewTaskForm(); // Reset form and editingTask state on dialog close
+        }}
         fullWidth
         maxWidth="sm"
         PaperProps={{
           sx: { backgroundColor: "#1c1c1c", color: "#f5f5f5", borderRadius: 2 },
         }}
       >
-        <DialogTitle sx={{ backgroundColor: "#121212", color: "#f5f5f5", display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          Add Kanban Task
-          <IconButton onClick={() => setOpenAddTaskDialog(false)} sx={{ color: '#f5f5f5' }}>
+        <DialogTitle
+          sx={{
+            backgroundColor: "#121212",
+            color: "#f5f5f5",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          {editingTask ? "Edit Kanban Task" : "Add Kanban Task"}{" "}
+          {/* Dynamic Title */}
+          <IconButton
+            onClick={() => {
+              setOpenAddTaskDialog(false);
+              resetNewTaskForm(); // Reset form and editingTask state on dialog close
+            }}
+            sx={{ color: "#f5f5f5" }}
+          >
             <CloseIcon />
           </IconButton>
         </DialogTitle>
@@ -621,9 +871,15 @@ const DashboardPage: React.FC = () => {
             InputLabelProps={{ style: { color: "#ccc" } }}
             InputProps={{
               style: { color: "#f5f5f5" },
-              inputProps: { maxLength: TITLE_CHAR_LIMIT }
+              inputProps: { maxLength: TITLE_CHAR_LIMIT },
             }}
-            sx={{ "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#555" }, "&:hover fieldset": { borderColor: "#888" }, "&.Mui-focused fieldset": { borderColor: "#90caf9" } } }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": { borderColor: "#555" },
+                "&:hover fieldset": { borderColor: "#888" },
+                "&.Mui-focused fieldset": { borderColor: "#90caf9" },
+              },
+            }}
           />
           <TextField
             label="Description"
@@ -638,9 +894,15 @@ const DashboardPage: React.FC = () => {
             InputLabelProps={{ style: { color: "#ccc" } }}
             InputProps={{
               style: { color: "#f5f5f5" },
-              inputProps: { maxLength: DESCRIPTION_CHAR_LIMIT }
+              inputProps: { maxLength: DESCRIPTION_CHAR_LIMIT },
             }}
-            sx={{ "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#555" }, "&:hover fieldset": { borderColor: "#888" }, "&.Mui-focused fieldset": { borderColor: "#90caf9" } } }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": { borderColor: "#555" },
+                "&:hover fieldset": { borderColor: "#888" },
+                "&.Mui-focused fieldset": { borderColor: "#90caf9" },
+              },
+            }}
           />
           <DatePicker
             label="Deadline"
@@ -653,7 +915,13 @@ const DashboardPage: React.FC = () => {
                 margin: "normal",
                 InputLabelProps: { style: { color: "#ccc" } },
                 InputProps: { style: { color: "#f5f5f5" } },
-                sx: { "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#555" }, "&:hover fieldset": { borderColor: "#888" }, "&.Mui-focused fieldset": { borderColor: "#90caf9" } } },
+                sx: {
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: "#555" },
+                    "&:hover fieldset": { borderColor: "#888" },
+                    "&.Mui-focused fieldset": { borderColor: "#90caf9" },
+                  },
+                },
               },
             }}
           />
@@ -673,15 +941,25 @@ const DashboardPage: React.FC = () => {
                   color: cat.color,
                 });
               } else {
-                setNewTask({ ...newTask, category: e.target.value, color: "#FFCDD2" });
+                setNewTask({
+                  ...newTask,
+                  category: e.target.value,
+                  color: "#FFCDD2",
+                });
               }
             }}
             InputLabelProps={{ style: { color: "#ccc" } }}
             InputProps={{ style: { color: "#f5f5f5" } }}
-            sx={{ "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#555" }, "&:hover fieldset": { borderColor: "#888" }, "&.Mui-focused fieldset": { borderColor: "#90caf9" } } }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": { borderColor: "#555" },
+                "&:hover fieldset": { borderColor: "#888" },
+                "&.Mui-focused fieldset": { borderColor: "#90caf9" },
+              },
+            }}
           >
             {categories.map((c) => (
-              <MenuItem key={c.id} value={c.name} sx={{ color: '#f5f5f5' }}>
+              <MenuItem key={c.id} value={c.name} sx={{ color: "#f5f5f5" }}>
                 <Box
                   display="flex"
                   justifyContent="space-between"
@@ -728,6 +1006,7 @@ const DashboardPage: React.FC = () => {
             ))}
           </TextField>
 
+          {/* --- MODIFICATION: "+ Add Category" button text changed to "+" --- */}
           <Button
             onClick={() => {
               if (editingCategoryId) {
@@ -742,11 +1021,23 @@ const DashboardPage: React.FC = () => {
           >
             {editingCategoryId
               ? "Close Edit Category"
-              : (showCategoryForm ? "Hide Category Form" : "+ Add Category")}
+              : showCategoryForm
+              ? "Hide Category Form"
+              : "+ Add Category"}{" "}
+            {/* Changed text here back to "Add Category" */}
           </Button>
+          {/* --- END MODIFICATION --- */}
 
           {showCategoryForm && (
-            <Box mt={2} p={2} sx={{ border: '1px solid #333', borderRadius: 2, backgroundColor: '#2a2a2a' }}>
+            <Box
+              mt={2}
+              p={2}
+              sx={{
+                border: "1px solid #333",
+                borderRadius: 2,
+                backgroundColor: "#2a2a2a",
+              }}
+            >
               <Typography variant="h6" sx={{ color: "#f5f5f5", mb: 1 }}>
                 {editingCategoryId ? "Edit Category" : "New Category"}
               </Typography>
@@ -759,9 +1050,15 @@ const DashboardPage: React.FC = () => {
                 InputLabelProps={{ style: { color: "#ccc" } }}
                 InputProps={{
                   style: { color: "#f5f5f5" },
-                  inputProps: { maxLength: CATEGORY_NAME_CHAR_LIMIT }
+                  inputProps: { maxLength: CATEGORY_NAME_CHAR_LIMIT },
                 }}
-                sx={{ "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#555" }, "&:hover fieldset": { borderColor: "#888" }, "&.Mui-focused fieldset": { borderColor: "#90caf9" } } }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: "#555" },
+                    "&:hover fieldset": { borderColor: "#888" },
+                    "&.Mui-focused fieldset": { borderColor: "#90caf9" },
+                  },
+                }}
               />
               <Typography variant="body2" sx={{ color: "#ccc", mt: 2, mb: 1 }}>
                 Select Color:
@@ -779,7 +1076,8 @@ const DashboardPage: React.FC = () => {
                       cursor: "pointer",
                       border:
                         categoryColor === color ? "2px solid #fff" : "none",
-                      boxShadow: categoryColor === color ? '0 0 0 1px ' + color : 'none',
+                      boxShadow:
+                        categoryColor === color ? "0 0 0 1px " + color : "none",
                     }}
                   />
                 ))}
@@ -792,7 +1090,14 @@ const DashboardPage: React.FC = () => {
                 margin="normal"
                 InputLabelProps={{ style: { color: "#ccc" } }}
                 InputProps={{ style: { color: "#f5f5f5" } }}
-                sx={{ mt: 2, "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#555" }, "&:hover fieldset": { borderColor: "#888" }, "&.Mui-focused fieldset": { borderColor: "#90caf9" } } }}
+                sx={{
+                  mt: 2,
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: "#555" },
+                    "&:hover fieldset": { borderColor: "#888" },
+                    "&.Mui-focused fieldset": { borderColor: "#90caf9" },
+                  },
+                }}
               />
               <Button
                 variant="contained"
@@ -816,11 +1121,23 @@ const DashboardPage: React.FC = () => {
             }
             InputLabelProps={{ style: { color: "#ccc" } }}
             InputProps={{ style: { color: "#f5f5f5" } }}
-            sx={{ "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#555" }, "&:hover fieldset": { borderColor: "#888" }, "&.Mui-focused fieldset": { borderColor: "#90caf9" } } }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": { borderColor: "#555" },
+                "&:hover fieldset": { borderColor: "#888" },
+                "&.Mui-focused fieldset": { borderColor: "#90caf9" },
+              },
+            }}
           >
-            <MenuItem value="low" sx={{ color: '#f5f5f5' }}>Low</MenuItem>
-            <MenuItem value="medium" sx={{ color: '#f5f5f5' }}>Medium</MenuItem>
-            <MenuItem value="high" sx={{ color: '#f5f5f5' }}>High</MenuItem>
+            <MenuItem value="low" sx={{ color: "#f5f5f5" }}>
+              Low
+            </MenuItem>
+            <MenuItem value="medium" sx={{ color: "#f5f5f5" }}>
+              Medium
+            </MenuItem>
+            <MenuItem value="high" sx={{ color: "#f5f5f5" }}>
+              High
+            </MenuItem>
           </TextField>
 
           <TextField
@@ -837,21 +1154,41 @@ const DashboardPage: React.FC = () => {
             }
             InputLabelProps={{ style: { color: "#ccc" } }}
             InputProps={{ style: { color: "#f5f5f5" } }}
-            sx={{ "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#555" }, "&:hover fieldset": { borderColor: "#888" }, "&.Mui-focused fieldset": { borderColor: "#90caf9" } } }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": { borderColor: "#555" },
+                "&:hover fieldset": { borderColor: "#888" },
+                "&.Mui-focused fieldset": { borderColor: "#90caf9" },
+              },
+            }}
           >
-            <MenuItem value="todo" sx={{ color: '#f5f5f5' }}>To Do</MenuItem>
-            <MenuItem value="inProgress" sx={{ color: '#f5f5f5' }}>In Progress</MenuItem>
-            <MenuItem value="done" sx={{ color: '#f5f5f5' }}>Done</MenuItem>
+            <MenuItem value="todo" sx={{ color: "#f5f5f5" }}>
+              To Do
+            </MenuItem>
+            <MenuItem value="inProgress" sx={{ color: "#f5f5f5" }}>
+              In Progress
+            </MenuItem>
+            <MenuItem value="done" sx={{ color: "#f5f5f5" }}>
+              Done
+            </MenuItem>
           </TextField>
 
           <Button
             variant="contained"
             color="primary"
-            fullWidth
-            onClick={handleAddTask}
-            sx={{ mt: 3 }}
+            onClick={handleSaveTask} // Now calls the combined save function
+            sx={{
+              mt: 2,
+              py: 1.5,
+              fontSize: "1rem",
+              fontWeight: 600,
+              textTransform: "none",
+              borderRadius: "8px",
+            }}
+            startIcon={<AddIcon />}
           >
-            Add Task
+            {editingTask ? "Save Changes" : "Add Task"}{" "}
+            {/* Dynamic Button Text */}
           </Button>
         </DialogContent>
       </Dialog>
