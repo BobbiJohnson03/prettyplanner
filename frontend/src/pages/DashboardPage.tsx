@@ -9,7 +9,7 @@ import {
   TextField,
   MenuItem,
   IconButton,
-  Alert,
+  // Alert,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
@@ -1023,7 +1023,7 @@ const DashboardPage: React.FC = () => {
               ? "Close Edit Category"
               : showCategoryForm
               ? "Hide Category Form"
-              : "+ Add Category"}{" "}
+              : "Add Category"}{" "}
             {/* Changed text here back to "Add Category" */}
           </Button>
           {/* --- END MODIFICATION --- */}
@@ -1197,3 +1197,4 @@ const DashboardPage: React.FC = () => {
 };
 
 export default DashboardPage;
+

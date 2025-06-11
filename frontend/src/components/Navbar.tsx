@@ -67,7 +67,7 @@ export default function Navbar() {
           <Button
             component={user ? RouterLink : "button"}
             to={user ? "/dashboard" : undefined}
-            className="nav-link nav-pink"
+            className="nav-link nav-blue"
             color="inherit"
             sx={{
               fontSize: "1.1rem",
@@ -105,15 +105,23 @@ export default function Navbar() {
 
           {user ? (
             <>
-              <Typography
+              <Button
+                component={user ? RouterLink : "button"}
+                to={user ? "/profile" : undefined}
+                className="nav-link nav-pink"
+                color="inherit"
                 sx={{
-                  mx: 1,
                   fontSize: "1rem",
                   fontWeight: 500,
+                  px: 2,
+                  py: 1.2,
+                  textTransform: "none",
+                  backgroundColor: "transparent",
+                  "&:hover": { backgroundColor: "transparent" },
                 }}
               >
                 Hello, {user.username}!
-              </Typography>
+              </Button>
               <Button
                 onClick={handleLogout}
                 className="nav-link nav-green"
@@ -150,21 +158,6 @@ export default function Navbar() {
               Login
             </Button>
           )}
-
-          <IconButton
-            color="inherit"
-            component={user ? RouterLink : "button"}
-            to={user ? "/profile" : undefined}
-            disabled={!user}
-            sx={{
-              fontSize: "2rem",
-              opacity: user ? 1 : 0.4,
-              pointerEvents: user ? "auto" : "none",
-              cursor: user ? "pointer" : "not-allowed",
-            }}
-          >
-            <SentimentSatisfiedAltIcon fontSize="inherit" />
-          </IconButton>
         </Box>
       </Toolbar>
     </AppBar>

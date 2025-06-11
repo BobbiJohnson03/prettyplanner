@@ -12,6 +12,8 @@ import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { useRegisterUserMutation } from "../redux/authApi";
 import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 
+const REGISTER_CHAR_LIMIT = 20;
+
 interface RegisterForm {
   username: string;
   email: string;
@@ -93,7 +95,10 @@ const RegisterPage: React.FC = () => {
             onChange={handleChange}
             required
             InputLabelProps={{ style: { color: "#ccc" } }}
-            InputProps={{ style: { color: "#f5f5f5" } }}
+            InputProps={{
+              style: { color: "#f5f5f5" },
+              inputProps: { maxLength: REGISTER_CHAR_LIMIT },
+            }}
             variant="outlined"
             size="medium"
             sx={{
@@ -114,7 +119,10 @@ const RegisterPage: React.FC = () => {
             onChange={handleChange}
             required
             InputLabelProps={{ style: { color: "#ccc" } }}
-            InputProps={{ style: { color: "#f5f5f5" } }}
+            InputProps={{
+              style: { color: "#f5f5f5" },
+              inputProps: { maxLength: REGISTER_CHAR_LIMIT },
+            }}
             variant="outlined"
             size="medium"
             sx={{
@@ -135,7 +143,10 @@ const RegisterPage: React.FC = () => {
             onChange={handleChange}
             required
             InputLabelProps={{ style: { color: "#ccc" } }}
-            InputProps={{ style: { color: "#f5f5f5" } }}
+            InputProps={{
+              style: { color: "#f5f5f5" },
+              inputProps: { maxLength: REGISTER_CHAR_LIMIT },
+            }}
             variant="outlined"
             size="medium"
             sx={{
@@ -156,7 +167,10 @@ const RegisterPage: React.FC = () => {
             onChange={handleChange}
             required
             InputLabelProps={{ style: { color: "#ccc" } }}
-            InputProps={{ style: { color: "#f5f5f5" } }}
+            InputProps={{
+              style: { color: "#f5f5f5" },
+              inputProps: { maxLength: REGISTER_CHAR_LIMIT },
+            }}
             variant="outlined"
             size="medium"
             sx={{
