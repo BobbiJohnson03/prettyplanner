@@ -9,6 +9,7 @@ import {
   TextField,
   MenuItem,
   IconButton,
+  Alert, // Keeping Alert for consistency, though custom modals are preferred for user-facing messages
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
@@ -38,6 +39,18 @@ import {
   Category,
 } from "../redux/categoryApi";
 
+// Import dnd-kit components and hooks
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+  DroppableProvided,
+  DroppableStateSnapshot,
+  DraggableProvided,
+  DraggableStateSnapshot,
+} from "@hello-pangea/dnd";
+
 const predefinedColors = [
   "#D32F2F", // Red
   "#F57C00", // Orange
@@ -54,54 +67,173 @@ const predefinedColors = [
   "#E6E6E3", // Default light grey from backend
 ];
 
-// Define column types for Kanban board
+const TITLE_CHAR_LIMIT = 20;
+const DESCRIPTION_CHAR_LIMIT = 40;
+const CATEGORY_NAME_CHAR_LIMIT = 20;
+
 type KanbanColumnStatus = "todo" | "inProgress" | "done";
 
-const initialData: Record<KanbanColumnStatus, KanbanTask[]> = {
-  todo: [],
-  inProgress: [],
-  done: [],
+// Helper function to check if a string is a valid KanbanColumnStatus
+const isValidKanbanColumn = (id: string | KanbanColumnStatus): id is KanbanColumnStatus => {
+  return ['todo', 'inProgress', 'done'].includes(id as KanbanColumnStatus);
+};
+
+// Interface for column mapping for dnd-kit
+interface ColumnMap {
+  [key: string]: KanbanTask[];
+}
+
+// Droppable component for columns
+interface DroppableColumnProps {
+  id: KanbanColumnStatus;
+  children: React.ReactNode;
+  title: string;
+}
+
+const DroppableColumn: React.FC<DroppableColumnProps> = ({ id, children, title }) => {
+  return (
+    <Droppable droppableId={id}>
+      {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => (
+        <Box
+          ref={provided.innerRef}
+          sx={{
+            width: 300,
+            minHeight: 400,
+            backgroundColor: snapshot.isDraggingOver ? "#2a2a2a" : "#1f1f1f", // Visual feedback when dragging over
+            borderRadius: 2,
+            p: 2,
+            flexShrink: 0,
+            transition: 'background-color 0.2s ease',
+          }}
+          {...provided.droppableProps}
+        >
+          <Typography variant="h6" align="center" sx={{ color: "#f5f5f5", textTransform: 'capitalize' }}>
+            {title}
+          </Typography>
+          {children}
+          {provided.placeholder} {/* Important for drag-and-drop to work visually */}
+        </Box>
+      )}
+    </Droppable>
+  );
+};
+
+// Draggable component for Kanban Tasks
+interface DraggableTaskProps {
+  task: KanbanTask;
+  index: number;
+  handleDeleteTask: (id: string) => void;
+  // TODO: Add prop for opening edit modal
+}
+
+const DraggableTask: React.FC<DraggableTaskProps> = ({ task, index, handleDeleteTask }) => {
+  return (
+    <Draggable draggableId={task.id} index={index}>
+      {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
+        <Box
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps} // Apply drag handle to the whole box
+          sx={{
+            p: 2,
+            m: 1,
+            backgroundColor: task.color || "#ccc",
+            borderRadius: 2,
+            color: "#fff",
+            fontWeight: 500,
+            cursor: "grab",
+            boxShadow: snapshot.isDragging
+              ? '0 5px 15px rgba(0,0,0,0.4)'
+              : '0 2px 4px rgba(0,0,0,0.2)',
+            transform: snapshot.isDragging ? 'rotate(2deg)' : 'none', // Slight rotation when dragging
+            opacity: snapshot.isDragging ? 0.8 : 1, // Make dragged item translucent
+            transition: 'box-shadow 0.1s ease, transform 0.1s ease, opacity 0.1s ease',
+          }}
+        >
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography
+              variant="body1"
+              sx={{
+                flexGrow: 1,
+                overflowWrap: 'break-word',
+                wordBreak: 'break-word',
+                whiteSpace: 'normal',
+                marginRight: 1,
+                fontWeight: 'bold'
+              }}
+            >
+              {task.title}
+            </Typography>
+            <Box sx={{ flexShrink: 0 }}>
+              <IconButton
+                size="small"
+                onClick={() => {
+                  console.log("TODO: Open edit modal for", task.id);
+                }}
+              >
+                <EditIcon sx={{ color: "#fff" }} />
+              </IconButton>
+              <IconButton
+                size="small"
+                onClick={() => handleDeleteTask(task.id)}
+              >
+                <DeleteIcon sx={{ color: "#fff" }} />
+              </IconButton>
+            </Box>
+          </Box>
+          <Typography
+            variant="body2"
+            sx={{
+              mt: 1,
+              overflowWrap: 'break-word',
+              wordBreak: 'break-word',
+              whiteSpace: 'normal',
+              fontSize: '0.85rem',
+              color: '#ddd'
+            }}
+          >
+            {task.description}
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 0.5 }}>
+            {task.deadline
+              ? `Due: ${dayjs(task.deadline).format("YYYY-MM-DD")}`
+              : "No deadline"}
+          </Typography>
+          <Typography variant="caption" sx={{ display: 'block', mt: 0.5 }}>
+            Priority: {task.priority}{" "}
+            {task.category && `(${task.category})`}
+          </Typography>
+        </Box>
+      )}
+    </Draggable>
+  );
 };
 
 const DashboardPage: React.FC = () => {
-  // Get user from Redux state
   const user = useSelector((state: RootState) => state.auth.user);
   const userId = user?.id;
 
-  // RTK Query hooks for tasks and categories
-  const { data: tasks = [], refetch } = useGetTasksByUserQuery(userId!, {
+  const { data: tasks = [], refetch, isFetching } = useGetTasksByUserQuery(userId!, {
     skip: !userId,
   });
-  const { data: categories = [], refetch: refetchCategories } =
-    useGetCategoriesByUserQuery(userId!, { skip: !userId });
+  const { data: categories = [], refetch: refetchCategories } = useGetCategoriesByUserQuery(userId!, {
+    skip: !userId,
+  });
 
-  // RTK Query mutations
-  const [addCategory] = useAddCategoryMutation();
-  const [updateCategory] = useUpdateCategoryMutation();
-  const [deleteCategory] = useDeleteCategoryMutation();
   const [addTask] = useAddTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
   const [deleteTask] = useDeleteTaskMutation();
+  const [addCategory] = useAddCategoryMutation();
+  const [updateCategory] = useUpdateCategoryMutation();
+  const [deleteCategory] = useDeleteCategoryMutation();
 
-  // State for Kanban columns (local UI state derived from fetched tasks)
-  const [columns, setColumns] = useState(initialData);
-  // State for Add Task dialog open/close
+  const [columns, setColumns] = useState<ColumnMap>({ todo: [], inProgress: [], done: [] });
   const [openAddTaskDialog, setOpenAddTaskDialog] = useState(false);
-  // State for dragged task ID (for drag-and-drop)
-  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
-
-  // State for category form visibility
   const [showCategoryForm, setShowCategoryForm] = useState(false);
-  // State for category name input
   const [categoryName, setCategoryName] = useState("");
-  // State for category color input
   const [categoryColor, setCategoryColor] = useState("#E6E6E3");
-  // State for category being edited (if any)
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
-    null
-  );
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
 
-  // State for new task form fields
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
@@ -109,42 +241,40 @@ const DashboardPage: React.FC = () => {
     priority: "medium",
     status: "todo" as KanbanColumnStatus,
     color: "#FFCDD2",
-    category: "", // Initialize as empty string
+    category: "",
   });
 
-  // Define new character limits for title and description
-  const TITLE_CHAR_LIMIT = 20; // Changed to 20
-  const DESCRIPTION_CHAR_LIMIT = 40; // Changed to 40
-
+  // Effect to synchronize tasks from RTK Query with local columns state
+  // This useEffect ensures the local 'columns' state reflects the 'tasks' data from RTK Query.
+  // It's crucial for initial load and after refetches.
   useEffect(() => {
-    const mapped: Record<KanbanColumnStatus, KanbanTask[]> = {
-      todo: [],
-      inProgress: [],
-      done: [],
-    };
-    tasks.forEach((task) => {
-      if (task.status && task.status in mapped) {
-        mapped[task.status].push(task);
-      } else {
-        console.warn(`Task with invalid status found: ${task.status} for task ID: ${task.id}. Defaulting to 'todo'.`);
-        mapped.todo.push(task);
+    if (!isFetching) { 
+      const mapped: ColumnMap = { todo: [], inProgress: [], done: [] };
+      tasks.forEach((task) => {
+        if (isValidKanbanColumn(task.status)) {
+          mapped[task.status].push(task);
+        } else {
+          console.warn(`Task with invalid status found: ${task.status} for task ID: ${task.id}. Defaulting to 'todo'.`);
+          mapped.todo.push(task);
+        }
+      });
+      // Sort tasks within each column by orderIndex
+      Object.keys(mapped).forEach((k) => {
+        mapped[k].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+      });
+      
+      // Deep compare to prevent unnecessary re-renders when data is the same
+      if (JSON.stringify(mapped) !== JSON.stringify(columns)) {
+        setColumns(mapped);
       }
-    });
-    // Only update state if the new mapped object is different from the current state
-    if (JSON.stringify(mapped) !== JSON.stringify(columns)) {
-      setColumns(mapped);
     }
-  }, [tasks, columns]);
+  }, [tasks, isFetching]); // Depend on tasks and isFetching to trigger updates
 
-  // Handles adding a new task
   const handleAddTask = async () => {
     if (!userId) {
-      console.error("User not logged in. Cannot add task.");
       alert("Please log in to add tasks.");
       return;
     }
-
-    // Frontend Validation for required fields
     if (!newTask.title.trim()) {
       alert("Task title is required!");
       return;
@@ -154,17 +284,20 @@ const DashboardPage: React.FC = () => {
       return;
     }
 
-    // Ensure title and description adhere to character limits before sending to backend
     const trimmedTitle = newTask.title.slice(0, TITLE_CHAR_LIMIT);
     const trimmedDescription = newTask.description.slice(0, DESCRIPTION_CHAR_LIMIT);
-
-
     const finalDeadline = newTask.deadline ? newTask.deadline.toISOString() : new Date().toISOString();
 
     try {
+      // Calculate orderIndex for the new task based on the current column's tasks
+      // This is an optimistic calculation based on the current UI state.
+      const newOrderIndex = columns[newTask.status].length > 0 
+        ? Math.max(...columns[newTask.status].map(t => t.orderIndex || 0)) + 1 
+        : 0;
+
       const payload = {
-        title: trimmedTitle, // Use trimmed title
-        description: trimmedDescription, // Use trimmed description
+        title: trimmedTitle,
+        description: trimmedDescription,
         deadline: finalDeadline,
         priority: newTask.priority,
         status: newTask.status,
@@ -172,29 +305,41 @@ const DashboardPage: React.FC = () => {
         category: newTask.category,
         userId: userId,
         createdAt: new Date().toISOString(),
+        orderIndex: newOrderIndex, // Use the calculated orderIndex
       };
 
-      await addTask(payload).unwrap();
+      // Execute the addTask mutation and get the returned task with its actual ID
+      const addedTask = await addTask(payload).unwrap();
 
-      await refetch();
+      // IMPORTANT: Optimistically update the local 'columns' state with the task returned from the backend (which now has the correct ID)
+      setColumns(prevColumns => {
+        const newColumns = { ...prevColumns };
+        // Ensure the column exists before pushing
+        if (!newColumns[addedTask.status]) {
+          newColumns[addedTask.status] = [];
+        }
+        newColumns[addedTask.status] = [...newColumns[addedTask.status], addedTask];
+        // Sort the column to maintain order, especially useful for new tasks
+        newColumns[addedTask.status].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+        return newColumns;
+      });
+
+      // After optimistically updating, then refetch to ensure the RTK Query cache is fully consistent.
+      // The useEffect will pick up on this, but our immediate setColumns should prevent flicker.
+      await refetch(); 
       setOpenAddTaskDialog(false);
       setNewTask({
-        title: "",
-        description: "",
-        deadline: null,
-        priority: "medium",
-        status: "todo",
-        color: "#FFCDD2",
-        category: "",
+        title: "", description: "", deadline: null, priority: "medium",
+        status: "todo", color: "#FFCDD2", category: "",
       });
     } catch (err) {
       console.error("Error adding task:", err);
+      // Detailed error handling for user feedback
       if (typeof err === "object" && err !== null) {
         const fetchError = err as FetchBaseQueryError;
         if (fetchError.data) {
           try {
             const errorData = typeof fetchError.data === 'string' ? JSON.parse(fetchError.data) : fetchError.data;
-            console.error("Backend error data (parsed):", errorData);
             if (errorData && typeof errorData === 'object' && 'errors' in errorData) {
                 const validationErrors = Object.values(errorData.errors).flat().join(". ");
                 alert(`Validation Error: ${validationErrors || 'One or more fields are invalid. Check console for details.'}`);
@@ -208,7 +353,6 @@ const DashboardPage: React.FC = () => {
             alert("An unknown error occurred. Please check console for details.");
           }
         } else {
-          console.error("Backend error data is empty or malformed.");
           alert("An unexpected error occurred. No details from server. Check network tab.");
         }
       } else {
@@ -220,17 +364,18 @@ const DashboardPage: React.FC = () => {
   const handleDeleteTask = async (id: string) => {
     try {
       await deleteTask(id).unwrap();
-      await refetch();
+      await refetch(); // Refetch to remove the task from the UI
     } catch (err) {
       console.error("Error deleting task:", err);
+      alert("Failed to delete task.");
     }
   };
 
   const handleDeleteCategory = async (id: string) => {
     try {
       await deleteCategory(id).unwrap();
-      await refetchCategories();
-      await refetch();
+      await refetchCategories(); // Refetch categories list
+      await refetch(); // Refetch tasks too, in case tasks using this category need re-evaluation (as per backend logic)
     } catch (error) {
       console.error("Failed to delete category:", error);
       if (typeof error === "object" && error !== null && "data" in error) {
@@ -243,7 +388,6 @@ const DashboardPage: React.FC = () => {
 
   const handleSaveCategory = async () => {
     if (!userId) {
-      console.error("User not logged in. Cannot save category.");
       alert("Please log in to save categories.");
       return;
     }
@@ -257,7 +401,8 @@ const DashboardPage: React.FC = () => {
       alert("Invalid HEX color format. Please use #RRGGBB or #RGB.");
       return;
     }
-
+    const trimmedCategoryName = categoryName.slice(0, CATEGORY_NAME_CHAR_LIMIT); 
+    
     try {
       if (editingCategoryId) {
         const existingCategory = categories.find((c) => c.id === editingCategoryId);
@@ -266,7 +411,7 @@ const DashboardPage: React.FC = () => {
             id: editingCategoryId,
             updated: {
               ...existingCategory,
-              name: categoryName,
+              name: trimmedCategoryName,
               color: categoryColor,
             },
           }).unwrap();
@@ -277,12 +422,12 @@ const DashboardPage: React.FC = () => {
         }
       } else {
         await addCategory({
-          name: categoryName,
+          name: trimmedCategoryName,
           color: categoryColor,
           userId,
         }).unwrap();
       }
-      await refetchCategories();
+      await refetchCategories(); // Refresh categories list
       setCategoryName("");
       setCategoryColor("#E6E6E3");
       setEditingCategoryId(null);
@@ -292,51 +437,121 @@ const DashboardPage: React.FC = () => {
       if (typeof error === "object" && error !== null && "data" in error) {
         console.error("Backend error details (raw):", error);
         console.error("Backend error data (JSON):", JSON.stringify((error as any).data, null, 2));
-        alert(`Error saving category: ${(error as any).data?.message || 'Check console for details.'}`);
-      } else {
-        alert("An unknown error occurred while saving category.");
       }
+      alert(`Error saving category: ${(error as any).data?.message || 'Check console for details.'}`);
     }
   };
 
-  const handleDrop = async (targetStatus: KanbanColumnStatus) => {
-    if (!draggedTaskId) return;
+  // @hello-pangea/dnd `onDragEnd` handler
+  const handleDragEnd = async (result: DropResult) => {
+    const { source, destination, draggableId } = result;
 
-    const sourceCol = Object.keys(columns).find((key) =>
-      columns[key as KanbanColumnStatus].some((task) => task.id === draggedTaskId)
-    ) as KanbanColumnStatus | undefined;
-
-    if (!sourceCol) {
-      console.warn("Dragged task not found in any column.");
+    // 1. Dropped outside a droppable area
+    if (!destination) {
+      console.log("Dropped outside valid droppable area. Reverting UI to last fetched state.");
+      await refetch(); // Revert UI to match backend (discard optimistic update)
       return;
     }
 
-    const draggedTask = columns[sourceCol].find(
-      (t) => t.id === draggedTaskId
-    );
+    // 2. Identify source and destination columns/tasks
+    const sourceColId = source.droppableId as KanbanColumnStatus;
+    const destColId = destination.droppableId as KanbanColumnStatus;
 
+    if (!isValidKanbanColumn(sourceColId) || !isValidKanbanColumn(destColId)) {
+        console.error("Invalid source or destination column ID during drag end. Reverting UI.");
+        await refetch(); // Revert UI
+        return;
+    }
+
+    // Find the task being dragged from the current local state
+    const draggedTask = columns[sourceColId].find((t) => t.id === draggableId);
     if (!draggedTask) {
-      console.warn("Dragged task object not found.");
+      console.error("Dragged task not found in source column during handleDragEnd. Reverting UI.");
+      await refetch(); // Revert UI
       return;
     }
 
-    const updatedTaskForBackend = { ...draggedTask, status: targetStatus };
+    // Deep clone current columns for safe optimistic update
+    const newColumns: ColumnMap = JSON.parse(JSON.stringify(columns));
 
+    const sourceTasks = newColumns[sourceColId];
+    const destTasks = newColumns[destColId];
+
+    // Prepare updates for backend based on the new order/status
+    const updatesForBackend: { id: string; updated: Partial<KanbanTask> }[] = [];
+
+    // Case 1: Moving within the same column
+    if (sourceColId === destColId) {
+      const reorderedTasks = Array.from(sourceTasks); // Create a fresh array for reordering
+      const [movedItem] = reorderedTasks.splice(source.index, 1);
+      reorderedTasks.splice(destination.index, 0, movedItem);
+
+      // Optimistic UI update
+      setColumns((prev) => ({
+        ...prev,
+        [sourceColId]: reorderedTasks, // Update the specific column with the new order
+      }));
+
+      // Queue updates for all tasks in this column, ensuring their new orderIndex
+      reorderedTasks.forEach((task, index) => {
+        updatesForBackend.push({ id: task.id, updated: { orderIndex: index } });
+      });
+
+    }
+    // Case 2: Moving to a different column
+    else {
+      // Remove from source column
+      const [movedItem] = sourceTasks.splice(source.index, 1);
+      // Update the status of the moved item in the local state copy
+      movedItem.status = destColId; 
+      // Insert into destination column
+      destTasks.splice(destination.index, 0, movedItem);
+
+      // Optimistic UI update
+      setColumns((prev) => ({
+        ...prev,
+        [sourceColId]: sourceTasks, // Source column is now missing the dragged item
+        [destColId]: destTasks,     // Destination column has the dragged item
+      }));
+
+      // Queue updates for backend
+      // 1. Update the moved task's status and its new order index in the destination column
+      updatesForBackend.push({ 
+        id: movedItem.id, 
+        updated: { status: destColId, orderIndex: destination.index } 
+      });
+
+      // 2. Re-index all tasks in the source column
+      sourceTasks.forEach((task, index) => {
+        updatesForBackend.push({ id: task.id, updated: { orderIndex: index } });
+      });
+
+      // 3. Re-index all tasks in the destination column (excluding the one just moved, handled above)
+      destTasks.forEach((task, index) => {
+        // We ensure `movedItem`'s orderIndex is set by its direct update above.
+        // Other items in the dest column might also need orderIndex updates if they shifted.
+        if (task.id !== draggedTask.id) { // Only update if it's not the task that was just moved
+          updatesForBackend.push({ id: task.id, updated: { orderIndex: index } });
+        }
+      });
+    }
+
+    // Execute all backend updates
     try {
-      await updateTask({
-        id: draggedTask.id,
-        updated: updatedTaskForBackend,
-      }).unwrap();
-      await refetch();
-    } catch (error) {
-      console.error("Failed to update task status on drop:", error);
-      if (typeof error === "object" && error !== null && "data" in error) {
-        console.error("Backend error details (raw):", error);
-        console.error("Backend error data (JSON):", JSON.stringify((error as any).data, null, 2));
+      for (const update of updatesForBackend) {
+        // Ensure id is not null before attempting update
+        if (update.id) {
+            await updateTask(update).unwrap();
+        }
       }
-      alert(`Error updating task status: ${(error as any).data?.message || 'Check console for details.'}`);
-    } finally {
-      setDraggedTaskId(null);
+      // After all backend updates are sent, refetch to ensure ultimate consistency
+      // This refetch should ideally just confirm the optimistic state, not fight it.
+      await refetch(); 
+      console.log("Drag and drop successful, UI synchronized with backend.");
+    } catch (error) {
+      console.error("Failed to complete drag and drop operation:", error);
+      alert("Failed to move task. Reverting changes. Please try again.");
+      await refetch(); // IMPORTANT: Revert UI to match backend if any API call fails
     }
   };
 
@@ -366,102 +581,20 @@ const DashboardPage: React.FC = () => {
         </Button>
       </Box>
 
-      <Box display="flex" justifyContent="center" gap={3} flexWrap="wrap">
-        {Object.entries(columns).map(([status, tasksInColumn]) => (
-          <Box
-            key={status}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={() => handleDrop(status as KanbanColumnStatus)}
-            sx={{
-              width: 300,
-              minHeight: 400,
-              backgroundColor: "#1f1f1f",
-              borderRadius: 2,
-              p: 2,
-              flexShrink: 0,
-            }}
-          >
-            <Typography variant="h6" align="center" sx={{ color: "#f5f5f5", textTransform: 'capitalize' }}>
-              {status.replace(/([A-Z])/g, ' $1').trim()}
-            </Typography>
-            {tasksInColumn.map((task) => (
-              <Box
-                key={task.id}
-                draggable
-                onDragStart={() => setDraggedTaskId(task.id)}
-                sx={{
-                  p: 2,
-                  m: 1,
-                  backgroundColor: task.color || "#ccc",
-                  borderRadius: 2,
-                  color: "#fff",
-                  fontWeight: 500,
-                  cursor: "grab",
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                }}
-              >
-                <Box display="flex" justifyContent="space-between" alignItems="center">
-                  {/* Visual Fix: Ensure title wraps and doesn't overflow */}
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      flexGrow: 1,
-                      overflowWrap: 'break-word', // Breaks long words
-                      wordBreak: 'break-word', // For older browsers
-                      whiteSpace: 'normal', // Ensure wrapping
-                      marginRight: 1, // Space between title and icons
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    {task.title}
-                  </Typography>
-                  <Box sx={{ flexShrink: 0 }}> {/* Prevent icons from pushing title */}
-                    <IconButton
-                      size="small"
-                      onClick={() => {
-                        console.log("TODO: Open edit modal for", task.id);
-                      }}
-                    >
-                      <EditIcon sx={{ color: "#fff" }} />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDeleteTask(task.id)}
-                    >
-                      <DeleteIcon sx={{ color: "#fff" }} />
-                    </IconButton>
-                  </Box>
-                </Box>
-                {/* Visual Fix: Ensure description wraps and doesn't overflow */}
-                <Typography
-                  variant="body2"
-                  sx={{
-                    mt: 1,
-                    overflowWrap: 'break-word',
-                    wordBreak: 'break-word',
-                    whiteSpace: 'normal',
-                    fontSize: '0.85rem', // Slightly smaller font for description
-                    color: '#ddd'
-                  }}
-                >
-                  {task.description}
-                </Typography>
-                <Typography variant="body2" sx={{ mt: 0.5 }}>
-                  {task.deadline
-                    ? `Due: ${dayjs(task.deadline).format("YYYY-MM-DD")}`
-                    : "No deadline"}
-                </Typography>
-                <Typography variant="caption" sx={{ display: 'block', mt: 0.5 }}>
-                  Priority: {task.priority}{" "}
-                  {task.category && `(${task.category})`}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        ))}
-      </Box>
+      {/* DragDropContext for @hello-pangea/dnd */}
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Box display="flex" justifyContent="center" gap={3} flexWrap="wrap">
+          {Object.entries(columns).map(([status, tasksInColumn]) => (
+            <DroppableColumn id={status as KanbanColumnStatus} title={status.replace(/([A-Z])/g, ' $1').trim()} key={status}>
+              {tasksInColumn.map((task, index) => (
+                <DraggableTask key={task.id} task={task} index={index} handleDeleteTask={handleDeleteTask} />
+              ))}
+            </DroppableColumn>
+          ))}
+        </Box>
+      </DragDropContext>
 
-      {/* Add Task Dialog (remains same as previous version) */}
+      {/* Add Task Dialog */}
       <Dialog
         open={openAddTaskDialog}
         onClose={() => setOpenAddTaskDialog(false)}
@@ -488,7 +621,7 @@ const DashboardPage: React.FC = () => {
             InputLabelProps={{ style: { color: "#ccc" } }}
             InputProps={{
               style: { color: "#f5f5f5" },
-              inputProps: { maxLength: TITLE_CHAR_LIMIT } // Character limit for the input
+              inputProps: { maxLength: TITLE_CHAR_LIMIT }
             }}
             sx={{ "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#555" }, "&:hover fieldset": { borderColor: "#888" }, "&.Mui-focused fieldset": { borderColor: "#90caf9" } } }}
           />
@@ -505,7 +638,7 @@ const DashboardPage: React.FC = () => {
             InputLabelProps={{ style: { color: "#ccc" } }}
             InputProps={{
               style: { color: "#f5f5f5" },
-              inputProps: { maxLength: DESCRIPTION_CHAR_LIMIT } // Character limit for the input
+              inputProps: { maxLength: DESCRIPTION_CHAR_LIMIT }
             }}
             sx={{ "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#555" }, "&:hover fieldset": { borderColor: "#888" }, "&.Mui-focused fieldset": { borderColor: "#90caf9" } } }}
           />
@@ -624,7 +757,10 @@ const DashboardPage: React.FC = () => {
                 onChange={(e) => setCategoryName(e.target.value)}
                 margin="normal"
                 InputLabelProps={{ style: { color: "#ccc" } }}
-                InputProps={{ style: { color: "#f5f5f5" } }}
+                InputProps={{
+                  style: { color: "#f5f5f5" },
+                  inputProps: { maxLength: CATEGORY_NAME_CHAR_LIMIT }
+                }}
                 sx={{ "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#555" }, "&:hover fieldset": { borderColor: "#888" }, "&.Mui-focused fieldset": { borderColor: "#90caf9" } } }}
               />
               <Typography variant="body2" sx={{ color: "#ccc", mt: 2, mb: 1 }}>

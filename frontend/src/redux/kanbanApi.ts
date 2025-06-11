@@ -11,7 +11,8 @@ export interface KanbanTask {
   color: string;
   userId: string;
   createdAt?: string; // ISO string format, optional as it's generated
-  category: string; // Changed to required string (can be empty string if no category selected)
+  category: string; // Can be empty string if no category selected
+  orderIndex: number; // <--- ADDED THIS LINE
 }
 
 export const kanbanApi = createApi({

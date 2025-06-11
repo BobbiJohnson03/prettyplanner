@@ -1,0 +1,18 @@
+'Log files:
+C:\Users\Luiza\Documents\GitHub\prettyplanner\frontend\UsersLuizaAppDataLocalnpm-cache\_logs\2025-06-11T06_36_20_482Z-debug-0.log
+
+# npm resolution error report
+
+While resolving: frontend@0.0.0
+Found: react@19.1.0
+node_modules/react
+  react@"^19.0.0" from the root project
+
+Could not resolve dependency:
+peer react@"^16.8.5 || ^17.0.0 || ^18.0.0" from react-beautiful-dnd@13.1.1
+node_modules/react-beautiful-dnd
+  react-beautiful-dnd@"*" from the root project
+
+Fix the upstream dependency conflict, or retry
+this command with --force or --legacy-peer-deps
+to accept an incorrect (and potentially broken) dependency resolution.

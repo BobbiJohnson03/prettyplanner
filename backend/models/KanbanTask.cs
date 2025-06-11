@@ -21,6 +21,9 @@ namespace GoalTracker.API.Models
         public string UserId { get; set; } = string.Empty;
         
         public DateTime Deadline { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow; 
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // NEW: Property to store the order within a column
+        public float OrderIndex { get; set; } = 0; // Using float for more flexible reordering
     }
 }
